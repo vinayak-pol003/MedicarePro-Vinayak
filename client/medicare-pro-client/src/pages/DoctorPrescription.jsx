@@ -80,15 +80,17 @@ export default function DoctorPrescription() {
         {/* left panel */}
             <div className="flex flex-col justify-center w-1/2 px-16 text-black">
         <h1 className="text-5xl font-bold mb-4">
-          Welcome to Medicare <span className="text-cyan-500">Pro</span>
-        </h1>
-        <p className="mb-6 text-lg max-w-lg text-gray-800">
-          Your trusted partner in healthcare management. Seamlessly manage your patients, appointments, and medical records anytime, anywhere — all with the security and privacy you deserve.
-        </p>
+    Doctor Prescription <span className="text-cyan-500">Medicare Pro</span>
+  </h1>
+  <p className="mb-6 text-lg max-w-2xl mx-auto text-gray-800">
+    Empowering doctors to provide better care. Easily create, manage, and share 
+    prescriptions with patients. Ensure accuracy, privacy, and accessibility for 
+    every treatment plan.
+  </p>
       </div>
 
     {/* right */}
-    <div className="max-w-2xl mx-auto p-8 bg-white shadow mt-16 rounded-lg max-h-[650px]">
+    <div className="max-w-xl mx-auto p-8 bg-white shadow mt-16 rounded-lg max-h-[630px]">
       <h2 className="text-2xl font-bold mb-6 text-cyan-800">Add Doctor's Prescription</h2>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">

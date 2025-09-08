@@ -100,12 +100,14 @@ ${prescription.notes || ""}
           }}
         >
           <div className="flex flex-col justify-center w-1/2 px-16 text-black">
-            <h1 className="text-5xl font-bold mb-4">
-              Welcome to Medicare <span className="text-cyan-500">Pro</span>
-            </h1>
-            <p className="mb-6 text-lg max-w-lg text-gray-800">
-              Your trusted partner in healthcare management. Seamlessly manage your patients, appointments, and medical records anytime, anywhere — all with the security and privacy you deserve.
-            </p>
+            <h1 className="text-4xl font-bold mb-4 text-cyan-600">
+                Thank You for Choosing <span className="text-gray-800">Medicare Pro</span>
+                </h1>
+                <p className="mb-6 text-lg max-w-lg text-gray-700">
+                We appreciate your trust in our healthcare services.  
+                Our doctors and staff are dedicated to providing you with the best care possible.  
+                You can manage your appointments, prescriptions, and medical records anytime — right here.
+                </p>
           </div>
     <div className="p-6 mt-13 max-w-2xl mx-auto">
       <div className="bg-white rounded-2xl shadow-xl p-8">

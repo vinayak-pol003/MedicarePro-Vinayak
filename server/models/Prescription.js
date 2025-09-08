@@ -5,13 +5,16 @@ const PrescriptionSchema = new mongoose.Schema({
   doctor: { type: mongoose.Schema.Types.ObjectId, ref: "Doctor", required: true },
   patient: { type: mongoose.Schema.Types.ObjectId, ref: "Patient", required: true },
   appointment: { type: mongoose.Schema.Types.ObjectId, ref: "Appointment", required: true },
-  symptoms: String,
-  diagnosis: String,
+  symptoms: { type: String },
+  diagnosis: { type: String },
   medications: [
-    { name: String, dosage: String, instructions: String }
+    {
+      name: { type: String },
+      dosage: { type: String },
+      instructions: { type: String }
+    }
   ],
-  notes: String,
-  createdAt: { type: Date, default: Date.now },
-});
+  notes: { type: String }
+}, { timestamps: true }); // adds createdAt and updatedAt automatically
 
 export default mongoose.model("Prescription", PrescriptionSchema);

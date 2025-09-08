@@ -2,6 +2,8 @@
 A full-stack hospital management solution built with React + Tailwind CSS (frontend) and Node.js + Express + MongoDB (backend).
 System supports authentication (JWT), role-based access (Admin, Doctor, Patient, Receptionist), patient management, appointments, and doctor prescriptions.
 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ✨ Features
 Authentication & Roles
 JWT-based login/logout
@@ -32,6 +34,7 @@ Doctor: Upcoming appointments & prescriptions
 
 Patient: Upcoming appointments & prescription records
 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 🎨 UI/UX
 Built with React and Tailwind CSS
 
@@ -55,6 +58,8 @@ Express.js
 MongoDB + Mongoose ORM
 
 JWT Authentication
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 📁 Project Structure
 text
@@ -104,6 +109,9 @@ npm install
 npm run dev
 Frontend runs at http://localhost:5173 (Vite default).
 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 🔑 API Endpoints
 Auth
 POST /api/auth/signup – Register
@@ -131,6 +139,9 @@ GET /api/prescriptions/:appointmentId – Get prescription for appointment
 
 GET /api/prescriptions/my – Get patient prescriptions
 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 🚀 Deployment
 Backend – Vercel / Render / Railway
 Push backend to GitHub
@@ -156,6 +167,8 @@ export default axios.create({
 });
 Deploy frontend, get public URL
 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 🧪 Testing
 Postman
 Import your API endpoints as a collection
@@ -166,6 +179,9 @@ Manual Flow
 Login as doctor → add prescription for an appointment
 
 Login as patient → view prescription in dashboard
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 📌 Roadmap
 ✅ Authentication (JWT)

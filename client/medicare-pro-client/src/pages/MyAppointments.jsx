@@ -10,7 +10,7 @@ const RatingStars = ({ rating = 0 }) => (
       <span
         key={i}
         style={{
-          color: "#d1c9e6",
+          color: i <= rating ? "#facc15" : "#d1c9e6", // yellow if filled, light gray otherwise
           fontSize: "1.15em",
           marginRight: "1px",
         }}
@@ -79,15 +79,19 @@ const MyAppointments = () => {
 
   return (
     <div className="p-6 mt-16">
-    <div className="bg-cyan-500 w-full p-6 rounded-lg shadow-md mb-6">
-      <div className="mb-8 bg-cyan-500">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Appointments</h1>
-            <p className="text-gray-600">Manage and track all appointments</p>
+      <div className="bg-cyan-500 w-full p-6 rounded-lg shadow-md mb-6">
+        <div className="mb-8 bg-cyan-500">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                Appointments
+              </h1>
+              <p className="text-gray-600">
+                Manage and track all appointments
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
         {/* Filters */}
         <div className="bg-cyan-500 rounded-lg shadow-md p-6 mb-6">
@@ -138,7 +142,9 @@ const MyAppointments = () => {
             </div>
           </div>
         ) : filteredAppointments.length === 0 ? (
-          <div className="px-8 pb-8 text-gray-500">You have no appointments scheduled.</div>
+          <div className="px-8 pb-8 text-gray-500">
+            You have no appointments scheduled.
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -150,11 +156,15 @@ const MyAppointments = () => {
                   <th className="py-4 px-6 font-semibold">Specialization</th>
                   <th className="py-4 px-6 font-semibold">Status</th>
                   <th className="py-4 px-6 font-semibold">Rating</th>
+                  <th className="py-4 px-6 font-semibold">Prescription</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredAppointments.map((apt, idx) => (
-                  <tr key={apt._id} className={idx % 2 === 1 ? "bg-cyan-50" : ""}>
+                  <tr
+                    key={apt._id}
+                    className={idx % 2 === 1 ? "bg-cyan-50" : ""}
+                  >
                     <td className="py-4 px-6">{shortDate(apt.date)}</td>
                     <td className="py-4 px-6">{formatTimeToIST(apt.time)}</td>
                     <td className="py-4 px-6 font-semibold">
@@ -162,11 +172,25 @@ const MyAppointments = () => {
                         {apt.doctor_id?.name || "Unknown"}
                       </span>
                     </td>
-                    <td className="py-4 px-6">{apt.doctor_id?.specialization || ""}</td>
+                    <td className="py-4 px-6">
+                      {apt.doctor_id?.specialization || ""}
+                    </td>
                     <td className="py-4 px-6 capitalize">{apt.status}</td>
                     <td className="py-4 px-6">
                       <RatingStars rating={apt.rating || 0} />
                     </td>
+                    <td className="py-4 px-6">
+                        {(apt.prescription && apt.prescription !== "null" && apt.prescription !== null && apt.prescription !== undefined) ? (
+                          <Link
+                            to={`/myprescription/${apt._id}`}
+                            className="text-cyan-600 hover:underline"
+                          >
+                            View
+                          </Link>
+                        ) : (
+                          <span className="text-gray-500">Not added</span>
+                        )}
+                      </td>
                   </tr>
                 ))}
               </tbody>

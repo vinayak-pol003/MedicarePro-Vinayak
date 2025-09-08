@@ -179,6 +179,84 @@ router.get(
 
 // ------------------- APPOINTMENTS -------------------
 // Get all appointments (admin & doctor only)
+// router.get(
+//   "/appointments",
+//   authMiddleware,
+//   roleCheck(["admin", "doctor"]),
+//   async (req, res) => {
+//     try {
+//       const appointments = await Appointment.find()
+//         .populate("patient_id", "name email")
+//         .populate("doctor_id", "name email specialization");
+//       res.json(appointments);
+//     } catch (err) {
+//       res.status(500).json({ error: err.message });
+//     }
+//   }
+// );
+// // Create appointment (always links to existing patient by _id)
+// router.post("/appointments", authMiddleware, roleCheck(["patient", "doctor", "admin"]), async (req, res) => {
+//   try {
+//     const { patient_id, doctor_id, date, time, status } = req.body;
+//     if (!patient_id || !doctor_id || !date || !time) {
+//       return res.status(400).json({ message: "Missing required fields" });
+//     }
+//     // Ensure patient_id is an ObjectId
+//     if (!mongoose.Types.ObjectId.isValid(patient_id)) {
+//       return res.status(400).json({ message: "Invalid patient id." });
+//     }
+//     const newAppointment = new Appointment({ patient_id, doctor_id, date, time, status });
+//     await newAppointment.save();
+//     res.status(201).json(newAppointment);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+// // Update appointment
+// router.put("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", "admin"]), async (req, res) => {
+//   try {
+//     const updateFields = req.body;
+//     const updated = await Appointment.findByIdAndUpdate(req.params.id, updateFields, { new: true });
+//     res.json(updated);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+// // Delete appointment
+// router.delete("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", "admin"]), async (req, res) => {
+//   try {
+//     await Appointment.findByIdAndDelete(req.params.id);
+//     res.json({ message: "Appointment deleted" });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+// // ------------------- PATIENT-SPECIFIC ROUTES -------------------
+// // Get logged-in patient's appointments
+// router.get(
+//   "/appointments/my",
+//   authMiddleware,
+//   roleCheck(["patient"]),
+//   async (req, res) => {
+//     try {
+//       // Find patient document with the user's email
+//       const patient = await Patient.findOne({ email: req.user.email });
+//       if (!patient) {
+//         // No patient profile found with this email
+//         return res.json([]);
+//       }
+//       // Find appointments for that patient
+//       const appointments = await Appointment.find({ patient_id: patient._id })
+//         .populate("doctor_id", "name email specialization");
+//       res.json(appointments);
+//     } catch (err) {
+//       res.status(500).json({ error: err.message });
+//     }
+//   }
+// );
+
+
+
 router.get(
   "/appointments",
   authMiddleware,
@@ -187,13 +265,15 @@ router.get(
     try {
       const appointments = await Appointment.find()
         .populate("patient_id", "name email")
-        .populate("doctor_id", "name email specialization");
+        .populate("doctor_id", "name email specialization")
+        .populate("prescription"); // <- ADDED: Always populate prescription!
       res.json(appointments);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   }
 );
+
 // Create appointment (always links to existing patient by _id)
 router.post("/appointments", authMiddleware, roleCheck(["patient", "doctor", "admin"]), async (req, res) => {
   try {
@@ -205,13 +285,15 @@ router.post("/appointments", authMiddleware, roleCheck(["patient", "doctor", "ad
     if (!mongoose.Types.ObjectId.isValid(patient_id)) {
       return res.status(400).json({ message: "Invalid patient id." });
     }
-    const newAppointment = new Appointment({ patient_id, doctor_id, date, time, status });
+    // Ensure prescription is always present in model
+    const newAppointment = new Appointment({ patient_id, doctor_id, date, time, status, prescription: null });
     await newAppointment.save();
     res.status(201).json(newAppointment);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 // Update appointment
 router.put("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", "admin"]), async (req, res) => {
   try {
@@ -222,6 +304,7 @@ router.put("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", 
     res.status(500).json({ error: err.message });
   }
 });
+
 // Delete appointment
 router.delete("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", "admin"]), async (req, res) => {
   try {
@@ -231,7 +314,9 @@ router.delete("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor
     res.status(500).json({ error: err.message });
   }
 });
+
 // ------------------- PATIENT-SPECIFIC ROUTES -------------------
+
 // Get logged-in patient's appointments
 router.get(
   "/appointments/my",
@@ -245,9 +330,10 @@ router.get(
         // No patient profile found with this email
         return res.json([]);
       }
-      // Find appointments for that patient
+      // Find appointments for that patient, populate doctor AND prescription
       const appointments = await Appointment.find({ patient_id: patient._id })
-        .populate("doctor_id", "name email specialization");
+        .populate("doctor_id", "name email specialization")
+        .populate("prescription"); // <- ADDED: Always populate prescription!
       res.json(appointments);
     } catch (err) {
       res.status(500).json({ error: err.message });

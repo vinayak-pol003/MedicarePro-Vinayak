@@ -16,6 +16,8 @@ import Admin from "./components/Admin.jsx";
 import Profile from "./pages/Profile.jsx";
 import MyAppointments from './pages/MyAppointments.jsx';
 import AddAppointment from "./pages/AddAppointment.jsx";
+import DoctorPrescription from "./pages/DoctorPrescription.jsx";
+import MyPrescription from "./pages/MyPrescription.jsx";
 
 
 export default function App() {
@@ -36,6 +38,8 @@ export default function App() {
           <Route path="/my-appointments" element={<MyAppointments/>}/>
           <Route path="/profile" element={<Profile/>}/>
           <Route path="/addappointment" element={<AddAppointment/>} />
+          <Route path="/doctorprescription/:id" element={<DoctorPrescription/>}/>
+          <Route path="/myprescription/:id" element={<MyPrescription/>}/>
         </Routes>
       </Router>
     </AuthProvider>

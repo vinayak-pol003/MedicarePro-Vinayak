@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import testRoutes from "./routes/testRoutes.js";
 import doctorRoutes from "./routes/doctorRoutes.js";
+import prescriptionRoutes from "./routes/prescriptionRoutes.js";
 import path from "path";
 import "./uploads.js"; // Ensure uploads directory exists
 
@@ -28,6 +29,7 @@ app.get("/", (req, res) => {
 // Use API routes under /api prefix
 app.use("/api", testRoutes);
 app.use("/api/doctors", doctorRoutes);
+app.use("/api/prescriptions", prescriptionRoutes);
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 

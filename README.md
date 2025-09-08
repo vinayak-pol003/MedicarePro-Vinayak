@@ -1,58 +1,52 @@
 🏥 Medicare Pro – Full Stack Hospital Management System
-A full-stack hospital management system built with React + Tailwind CSS (frontend) and Node.js + Express + MongoDB (backend).
-Supports authentication (JWT), role-based access (Admin, Doctor, Patient, Receptionist), patients management, appointments, and doctor prescriptions.
+A full-stack hospital management solution built with React + Tailwind CSS (frontend) and Node.js + Express + MongoDB (backend).
+System supports authentication (JWT), role-based access (Admin, Doctor, Patient, Receptionist), patient management, appointments, and doctor prescriptions.
 
 ✨ Features
-👩‍⚕️ Core Features
 Authentication & Roles
-
 JWT-based login/logout
 
-Role-based navigation (Admin, Doctor, Patient, Receptionist)
+Role-based navigation: Admin, Doctor, Patient, Receptionist
 
 Patients
-
 Add / View patients
 
 Patient profile with medical records
 
 Appointments
-
 Schedule new appointments
 
-List of appointments with status (Scheduled, Completed, Cancelled)
+List with status (Scheduled, Completed, Cancelled)
 
-Patients can see their appointments
+Patients see their own appointments
 
 Prescriptions
-
 Doctors can add prescriptions for appointments
 
-Patients can view prescriptions in their dashboard
+Patients view prescriptions from dashboard
 
 Dashboard
+Admin: Total users, patients, appointments overview
 
-Admin: total users, patients, appointments overview
+Doctor: Upcoming appointments & prescriptions
 
-Doctor: upcoming appointments & prescriptions
-
-Patient: upcoming appointments & prescription records
+Patient: Upcoming appointments & prescription records
 
 🎨 UI/UX
-Built with React + TailwindCSS
+Built with React and Tailwind CSS
 
-Responsive design for desktop & mobile
+Responsive: Works on desktop & mobile
 
-Loading states & error handling
+Loading states & error handling for smoother experience
 
 🛠️ Tech Stack
-Frontend
+Frontend:
 
 React (Vite)
 
 Tailwind CSS
 
-Backend
+Backend:
 
 Node.js
 
@@ -62,7 +56,7 @@ MongoDB + Mongoose ORM
 
 JWT Authentication
 
-📂 Project Structure
+📁 Project Structure
 text
 /medicare-pro
  ├── client/                # React Frontend
@@ -86,34 +80,32 @@ text
  └── .env
 ⚙️ Installation & Setup
 1. Clone Repository
-
-text
+bash
 git clone https://github.com/<your-username>/<your-repo>.git
 cd medicare-pro
 2. Backend Setup
-
-text
+bash
 cd server
 npm install
-Create a .env file inside server/ with:
+Create .env in server/ with:
 
 text
 MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/medicare
 JWT_SECRET=your_jwt_secret
 PORT=5000
-Run backend:
+Run backend server:
 
-text
+bash
 npm run dev
 3. Frontend Setup
-
-text
+bash
 cd client
 npm install
 npm run dev
+Frontend runs at http://localhost:5173 (Vite default).
+
 🔑 API Endpoints
 Auth
-
 POST /api/auth/signup – Register
 
 POST /api/auth/login – Login
@@ -121,63 +113,57 @@ POST /api/auth/login – Login
 POST /api/auth/logout – Logout
 
 Patients
-
 GET /api/patients – Get all patients
 
 POST /api/patients – Add new patient
 
-GET /api/patients/:id – Patient profile
+GET /api/patients/:id – Get patient profile
 
 Appointments
-
 GET /api/appointments – Get all appointments
 
 POST /api/appointments – Create appointment
 
 Prescriptions
-
-POST /api/prescriptions/:appointmentId – Doctor adds prescription
+POST /api/prescriptions/:appointmentId – Add prescription
 
 GET /api/prescriptions/:appointmentId – Get prescription for appointment
 
-GET /api/prescriptions/my – Patient gets all prescriptions
+GET /api/prescriptions/my – Get patient prescriptions
 
 🚀 Deployment
 Backend – Vercel / Render / Railway
-
 Push backend to GitHub
 
-Create account on Render or Railway
+Create project on Render/Railway
 
-Add environment variables (MONGO_URI, JWT_SECRET)
+Add ENV variables (MONGO_URI, JWT_SECRET)
 
-Deploy backend → get API base URL
+Deploy backend → note the backend API base URL
 
 Frontend – Vercel
-
-Push frontend (client/) to GitHub
+Push client/ to GitHub
 
 Connect repo to Vercel
 
-Update client/src/utils/api.js:
+Update API base URL:
+Edit client/src/utils/api.js to use deployed backend:
 
 js
 import axios from "axios";
 export default axios.create({
   baseURL: "https://your-backend-url.com/api",
 });
-Deploy → get frontend URL
+Deploy frontend, get public URL
 
 🧪 Testing
 Postman
+Import your API endpoints as a collection
 
-Import API collection
-
-Test login, patients, appointments, prescriptions
+Test authentication, patient CRUD, appointment creation, prescriptions
 
 Manual Flow
-
-Login as doctor → add prescription to appointment
+Login as doctor → add prescription for an appointment
 
 Login as patient → view prescription in dashboard
 

@@ -1,12 +1,9 @@
-﻿# Medicare Pro
-
 🏥 Medicare Pro – Full Stack Hospital Management System
-
-A full-stack hospital management system built with React + Tailwind CSS (frontend) and Node.js + Express + MongoDB (backend). The app supports authentication (JWT), role-based access (Admin, Doctor, Patient, Receptionist), patients management, appointments, and doctor prescriptions.
+A full-stack hospital management system built with React + Tailwind CSS (frontend) and Node.js + Express + MongoDB (backend).
+Supports authentication (JWT), role-based access (Admin, Doctor, Patient, Receptionist), patients management, appointments, and doctor prescriptions.
 
 ✨ Features
 👩‍⚕️ Core Features
-
 Authentication & Roles
 
 JWT-based login/logout
@@ -31,7 +28,7 @@ Prescriptions
 
 Doctors can add prescriptions for appointments
 
-Patients can view their prescriptions in dashboard
+Patients can view prescriptions in their dashboard
 
 Dashboard
 
@@ -42,7 +39,6 @@ Doctor: upcoming appointments & prescriptions
 Patient: upcoming appointments & prescription records
 
 🎨 UI/UX
-
 Built with React + TailwindCSS
 
 Responsive design for desktop & mobile
@@ -67,6 +63,7 @@ MongoDB + Mongoose ORM
 JWT Authentication
 
 📂 Project Structure
+text
 /medicare-pro
  ├── client/                # React Frontend
  │   ├── src/
@@ -87,33 +84,33 @@ JWT Authentication
  ├── .gitignore
  ├── README.md
  └── .env
-
 ⚙️ Installation & Setup
 1. Clone Repository
+
+text
 git clone https://github.com/<your-username>/<your-repo>.git
 cd medicare-pro
-
 2. Backend Setup
+
+text
 cd server
 npm install
-
-
 Create a .env file inside server/ with:
 
+text
 MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/medicare
 JWT_SECRET=your_jwt_secret
 PORT=5000
-
-
 Run backend:
 
+text
 npm run dev
-
 3. Frontend Setup
+
+text
 cd client
 npm install
 npm run dev
-
 🔑 API Endpoints
 Auth
 
@@ -143,15 +140,14 @@ POST /api/prescriptions/:appointmentId – Doctor adds prescription
 
 GET /api/prescriptions/:appointmentId – Get prescription for appointment
 
-GET /api/prescriptions/my – Patient gets all their prescriptions
+GET /api/prescriptions/my – Patient gets all prescriptions
 
 🚀 Deployment
 Backend – Vercel / Render / Railway
 
 Push backend to GitHub
 
-Create account on Render
- or Railway
+Create account on Render or Railway
 
 Add environment variables (MONGO_URI, JWT_SECRET)
 
@@ -163,14 +159,13 @@ Push frontend (client/) to GitHub
 
 Connect repo to Vercel
 
-In client/src/utils/api.js, update baseURL to deployed backend:
+Update client/src/utils/api.js:
 
+js
 import axios from "axios";
 export default axios.create({
   baseURL: "https://your-backend-url.com/api",
 });
-
-
 Deploy → get frontend URL
 
 🧪 Testing
@@ -187,14 +182,17 @@ Login as doctor → add prescription to appointment
 Login as patient → view prescription in dashboard
 
 📌 Roadmap
-
 ✅ Authentication (JWT)
+
 ✅ Patient management
+
 ✅ Appointment management
+
 ✅ Doctor prescriptions
+
 ✅ Role-based dashboard
+
 🔲 Advanced features: Billing, Reports, Notifications
 
 👨‍💻 Author
-
-Built with ❤️ by [Your Name]
+Built with ❤️ by Vinayak

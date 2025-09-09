@@ -7,6 +7,7 @@ import Support from '../cards/Support';
 import SubscribeCard from "../cards/Subscribe";
 import bgImage from "../assets/bg.png";
 import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from "react-icons/fa";
+import FadeInSection from "../utils/Fade";
 
 const LEFT_PANEL_WIDTH = 440; // px, REDUCED for a tighter layout
 
@@ -70,7 +71,8 @@ const Profile = () => {
     );
 
   return (
-    <div
+    <FadeInSection>
+       <div
       className="min-h-screen w-full"
       style={{
         backgroundImage: `url(${bgImage})`,
@@ -207,6 +209,7 @@ const Profile = () => {
         </div>
       </div>
     </div>
+    </FadeInSection>
   );
 };
 

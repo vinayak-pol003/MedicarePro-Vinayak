@@ -6,10 +6,12 @@ import partnerAccreditation4 from "../assets/partner4.png";
 import Footer from "../components/Footer";
 import Slider from "react-slick";
 import LandingTestimonials from "./QALanding";
+import FadeInSection from "../utils/Fade";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gray-50 mt-16">
+    <FadeInSection>
+      <div className="min-h-screen bg-gray-50 mt-16">
       {/* Hero Section */}
       <section className="flex flex-col items-center px-6 md:px-20 py-10 bg-cyan-600">
         <div className="w-full max-w-5xl flex flex-col md:flex-row items-center gap-10">
@@ -194,7 +196,8 @@ export default function Landing() {
       </section>
 
       {/* Contact & Location Section */}
-      <section className="bg-gray-50 py-12">
+      <FadeInSection>
+         <section className="bg-gray-50 py-12">
         <div className="max-w-4xl mx-auto">
           <h4 className="text-lg font-semibold text-gray-700 text-center mb-8">
             Contact & Location
@@ -230,8 +233,13 @@ export default function Landing() {
         </div>
       </section>
 
+      </FadeInSection>
+     
+
       {/* Footer */}
       <Footer />
     </div>
+    </FadeInSection>
+    
   );
 }

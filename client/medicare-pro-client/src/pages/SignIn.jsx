@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from "react-icons/fa";
 import bgImage from "../assets/bg.png"; // Ensure the path is correct
+import FadeInSection from "../utils/Fade.jsx";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -52,7 +53,9 @@ export default function SignIn() {
   };
 
   return (
-    <div
+
+    <FadeInSection>
+      <div
       className="min-h-screen flex items-center justify-center"
       style={{
         backgroundImage: `url(${bgImage})`,
@@ -141,5 +144,9 @@ export default function SignIn() {
         </div>
       </div>
     </div>
+
+
+    </FadeInSection>
+    
   );
 }

@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function Doctors() {
+
+    const navigate = useNavigate();
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -77,9 +80,12 @@ export default function Doctors() {
               Browse and manage doctor profiles
             </p>
           </div>
-          <button className="bg-cyan-600 text-white px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors">
-            Add Doctor
-          </button>
+          <button
+  className="bg-cyan-600 text-white px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors"
+  onClick={() => navigate("/add-doctor")}
+>
+  Add Doctor
+</button>
         </div>
 
         {/* Filters */}

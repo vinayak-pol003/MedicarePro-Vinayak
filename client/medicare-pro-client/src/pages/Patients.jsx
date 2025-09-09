@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import FadeInSection from "../utils/Fade";
 
 export default function Patients() {
   const [patients, setPatients] = useState([]);
@@ -70,7 +71,8 @@ export default function Patients() {
   }
 
   return (
-    <div className="p-6 mt-16">
+    <FadeInSection>
+      <div className="p-6 mt-16">
       {/* ------- Header Section ------- */}
       <div className="bg-cyan-500 w-full p-6 rounded-lg shadow-md mb-6">
         <div className="mb-8 bg-cyan-500">
@@ -178,5 +180,7 @@ export default function Patients() {
         ))}
       </div>
     </div>
+    </FadeInSection>
+    
   );
 }

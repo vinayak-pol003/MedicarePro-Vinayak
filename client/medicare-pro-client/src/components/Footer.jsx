@@ -4,10 +4,10 @@ import instagramLogo from "../assets/insta.png";
 
 export default function Footer() {
   return (
-    <footer className="bg-cyan-600 text-white pt-10 pb-0 px-6">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 md:gap-0 justify-between">
+    <footer className="bg-cyan-600 text-white pt-10 pb-0 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 md:gap-0 justify-between w-full">
         {/* Logo and Social */}
-        <div className="md:w-1/4 flex flex-col items-start">
+        <div className="md:w-1/4 w-full flex flex-col items-start mb-8 md:mb-0">
           <div className="flex items-center mb-4">
             {/* Char Logo */}
             <span className="flex items-center justify-center w-9 h-9 rounded-full bg-cyan-600 text-white font-bold text-lg mr-2">
@@ -32,7 +32,7 @@ export default function Footer() {
         </div>
 
         {/* Navigation Columns */}
-        <div className="md:w-3/4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-cyan-50 text-sm">
+        <div className="md:w-3/4 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-cyan-50 text-sm">
           <div>
             <h5 className="font-bold text-white mb-2">Connect With Us</h5>
             <ul className="space-y-1">
@@ -77,11 +77,11 @@ export default function Footer() {
 
       {/* Divider and Copyright */}
       <div className="border-t border-cyan-500 my-6" />
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between px-4 pb-6">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between px-4 pb-6 w-full">
         <span className="text-cyan-100 text-xs mb-2 md:mb-0">
           ©2015–{new Date().getFullYear()} ALL RIGHTS RESERVED.
         </span>
-        <div className="space-x-6 text-cyan-200 text-xs">
+        <div className="space-x-4 sm:space-x-6 text-cyan-200 text-xs flex flex-wrap justify-center md:justify-end w-full md:w-auto">
           <a href="#" className="hover:underline">Price Transparency</a>
           <a href="#" className="hover:underline">Patient Rights and Privacy</a>
           <a href="#" className="hover:underline">Notices and Policies</a>

@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import bgImage from "../assets/bg.png";
 import { AuthContext } from "../contex/AuthContext.jsx";
+import FadeInSection from "../utils/Fade.jsx";
 
 export default function AddPatient({ onAdded }) {
   const { user } = useContext(AuthContext);
@@ -94,7 +95,8 @@ export default function AddPatient({ onAdded }) {
   };
 
   return (
-    <div
+    <FadeInSection>
+      <div
       className="min-h-screen flex items-center justify-center"
       style={{
         backgroundImage: `url(${bgImage})`,
@@ -204,5 +206,7 @@ export default function AddPatient({ onAdded }) {
         </button>
       </form>
     </div>
+    </FadeInSection>
+    
   );
 }

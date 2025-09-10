@@ -16,10 +16,10 @@ const SubscribeCard = () => {
   };
 
   return (
-    <div className="max-full mx-auto bg-white rounded-xl shadow-md p-8 mt-10 w-full">
+    <div className="max-full mx-auto bg-white  rounded-xl shadow-md p-8 mt-10 w-full">
       <h2 className="text-xl font-bold text-center mb-1">Stay Updated</h2>
       <p className="text-gray-500 text-center mb-6">
-        Get the latest market insights and platform updates
+        Get the latest medical insights and platform updates
       </p>
       <form
         className="flex items-center justify-center"

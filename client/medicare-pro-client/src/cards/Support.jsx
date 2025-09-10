@@ -1,14 +1,21 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import the hook
 
 const faqs = [
   "How can I export my data?",
   "Is KYC verification mandatory?",
-  "What are the trading fees?",
+  "What are the consultation fees?",
   "How secure is my account?",
 ];
 
 const SupportFAQsCard = () => {
   const [active, setActive] = useState(null);
+  const navigate = useNavigate(); // Initialize the hook
+
+  // Click handler for Live Chat
+  const handleLiveChat = () => {
+    navigate("/chat");
+  };
 
   return (
     <div className="max-w-2xl mx-auto mt-10">
@@ -33,7 +40,11 @@ const SupportFAQsCard = () => {
           <button className="border border-cyan-500 text-cyan-700 font-medium py-2 px-4 rounded transition hover:bg-violet-50" type="button">
             Contact Support
           </button>
-          <button className="bg-cyan-600 text-white font-medium py-2 px-4 rounded" type="button">
+          <button
+            className="bg-cyan-600 text-white font-medium py-2 px-4 rounded"
+            type="button"
+            onClick={handleLiveChat} // Use the handler
+          >
             Live Chat
           </button>
         </div>
@@ -41,9 +52,10 @@ const SupportFAQsCard = () => {
 
       {/* About section */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h2 className="text-base font-bold mb-2">About BullsNBear</h2>
+        <h2 className="text-base font-bold mb-2">About Medicare Pro</h2>
         <p className="text-gray-600">
-          BullsNBear is a comprehensive trading platform designed to empower traders at every level. We provide advanced market analysis tools, real-time data, educational resources, and a vibrant community to help you make informed trading decisions and grow your portfolio.
+          Medicare Pro is an all-in-one healthcare platform where patients can manage profiles, book appointments, and access medical information, while providers handle scheduling and prescriptions efficiently.
+          It’s secure, easy to use, and designed to make healthcare simple for everyone.
         </p>
       </div>
     </div>

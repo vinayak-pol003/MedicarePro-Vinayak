@@ -1,5 +1,5 @@
 import express from "express";
-import bcrypt from "bcrypt";
+import bcrypt from 'bcryptjs';
 import jwt from "jsonwebtoken";
 import multer from "multer";
 import path from "path";
@@ -273,6 +273,28 @@ router.get(
     }
   }
 );
+
+
+router.get(
+  "/appointments/today",
+  authMiddleware,
+  roleCheck(["admin", "doctor"]),
+  async (req, res) => {
+    try {
+      // Get today's date string in YYYY-MM-DD format
+      const today = new Date().toISOString().slice(0, 10);
+      // Find only appointments for today
+      const appointments = await Appointment.find({ date: today })
+        .populate("patient_id", "name email")
+        .populate("doctor_id", "name email specialization")
+        .populate("prescription");
+      res.json(appointments);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 
 // Create appointment (always links to existing patient by _id)
 router.post("/appointments", authMiddleware, roleCheck(["patient", "doctor", "admin"]), async (req, res) => {

@@ -21,6 +21,7 @@ import MyPrescription from "./pages/MyPrescription.jsx";
 import ContactUs from "./pages/ContactUs.jsx";
 import AboutUs from "./pages/AboutUs.jsx";
 import AddDoctor from "./pages/AddDoctors.jsx";
+import ChatWithGemini from "./pages/ChatWithGemini.jsx";
 
 
 export default function App() {
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/contactus" element={<ContactUs/>}/>
           <Route path="/aboutus" element={<AboutUs/>}/>
           <Route path="/add-doctor" element={<AddDoctor/>}/>
+          <Route path="/chat" element={<ChatWithGemini/>} />"
         </Routes>
       </Router>
     </AuthProvider>

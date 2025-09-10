@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import API from "../utils/api";
 import { AuthContext } from "../contex/AuthContext.jsx";
+import FadeInSection from "../utils/Fade.jsx";
 
 // Star rating rendering
 const RatingStars = ({ rating = 0 }) => (
@@ -78,7 +79,8 @@ const MyAppointments = () => {
   });
 
   return (
-    <div className="p-6 mt-16">
+    <FadeInSection>
+      <div className="p-6 mt-16">
       <div className="bg-cyan-500 w-full p-6 rounded-lg shadow-md mb-6">
         <div className="mb-8 bg-cyan-500">
           <div className="flex justify-between items-center">
@@ -200,6 +202,8 @@ const MyAppointments = () => {
         )}
       </div>
     </div>
+    </FadeInSection>
+    
   );
 };
 

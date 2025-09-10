@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import FadeInSection from "../utils/Fade";
 
 export default function Doctors() {
 
@@ -70,7 +71,8 @@ export default function Doctors() {
   }
 
   return (
-    <div className="p-6 mt-16">
+    <FadeInSection>
+      <div className="p-6 mt-16">
       {/* ------- Top Section ------- */}
       <div className="bg-cyan-500 w-full p-6 rounded-lg shadow-md mb-6 h-72">
         <div className="flex justify-between items-center mb-6">
@@ -288,5 +290,8 @@ export default function Doctors() {
         </div>
       )}
     </div>
+
+    </FadeInSection>
+    
   );
 }

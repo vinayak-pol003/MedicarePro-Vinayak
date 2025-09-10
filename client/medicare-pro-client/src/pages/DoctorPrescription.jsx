@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import bgImage from '../assets/bg.png'
+import FadeInSection from "../utils/Fade";
 
 export default function DoctorPrescription() {
   const { id } = useParams(); // appointment id from route
@@ -69,7 +70,9 @@ export default function DoctorPrescription() {
   };
 
   return (
-    <div
+
+    <FadeInSection>
+      <div
           className="min-h-screen flex items-center justify-center"
           style={{
             backgroundImage: `url(${bgImage})`,
@@ -194,5 +197,7 @@ export default function DoctorPrescription() {
     </div>
 
      </div>
+    </FadeInSection>
+    
   );
 }

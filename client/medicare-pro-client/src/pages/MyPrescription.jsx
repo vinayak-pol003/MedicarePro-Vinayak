@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import API from "../utils/api";
 import bgImage from '../assets/bg.png'
+import FadeInSection from "../utils/Fade";
 
 
 const MyPrescription = () => {
@@ -90,8 +91,8 @@ ${prescription.notes || ""}
   }
 
   return (
-
-    <div
+    <FadeInSection>
+       <div
           className="min-h-screen flex items-center justify-center"
           style={{
             backgroundImage: `url(${bgImage})`,
@@ -187,6 +188,9 @@ ${prescription.notes || ""}
       </div>
     </div>
     </div>
+    </FadeInSection>
+
+   
   );
 };
 

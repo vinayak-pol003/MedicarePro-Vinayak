@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import API from "../utils/api";
 import { AuthContext } from "../contex/AuthContext.jsx";
+import FadeInSection from "../utils/Fade.jsx";
 
 // Utility function to get today's date in YYYY-MM-DD format
 function getTodayString() {
@@ -36,7 +37,7 @@ export default function Dashboard() {
           API.get("/doctors"),
           API.get("/patients"),
           API.get("/appointments"),
-          API.get(`/appointments?date=${getTodayString()}`),
+          API.get(`/appointments/today`),
         ]);
 
         setStats({
@@ -73,7 +74,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6 mt-16">
+    <FadeInSection>
+      <div className="p-6 mt-16">
       <div className="bg-cyan-500 w-full p-6 rounded-lg shadow-md mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">System Dashboard</h1>
         <p className="text-gray-600">Welcome, {user?.name}!</p>
@@ -98,5 +100,7 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+    </FadeInSection>
+    
   );
 }

@@ -3,6 +3,7 @@ import axios from "axios";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import AddAppointment from "./AddAppointment.jsx";
 import { Link, useNavigate } from "react-router-dom";
+import FadeInSection from "../utils/Fade.jsx";
 
 export default function Appointments() {
   const { user } = useContext(AuthContext);
@@ -127,7 +128,8 @@ export default function Appointments() {
 };
 
   return (
-    <div className="p-6 mt-16">
+  <FadeInSection>
+     <div className="p-6 mt-16">
       <div className="bg-cyan-500 w-full p-6 rounded-lg shadow-md mb-6">
         <div className="mb-8 bg-cyan-500" >
           <div className="flex justify-between items-center">
@@ -301,5 +303,9 @@ export default function Appointments() {
         )}
       </div>
     </div>
+
+
+  </FadeInSection>
+   
   );
 }

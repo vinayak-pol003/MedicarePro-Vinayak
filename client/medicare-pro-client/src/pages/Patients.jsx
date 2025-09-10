@@ -162,7 +162,7 @@ export default function Patients() {
               )}
               <div className="flex items-center justify-between mt-4">
   <Link
-    to={`/patients/${p._id}`}
+    to={`/appointments/${p._id}`}
     className="text-[#1897c6] font-semibold hover:underline text-sm"
   >
     View Profile

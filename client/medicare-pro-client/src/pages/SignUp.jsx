@@ -3,6 +3,7 @@
   import { useNavigate, useLocation } from "react-router-dom";
   import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from "react-icons/fa";
   import bgImage from '../assets/bg.png'; // Ensure the path is correct
+import FadeInSection from "../utils/Fade";
 
   export default function SignUp() {
     const location = useLocation();
@@ -38,7 +39,8 @@
     };
 
     return (
-      <div className="min-h-screen flex items-center justify-center"
+      <FadeInSection>
+         <div className="min-h-screen flex items-center justify-center"
             style={{ backgroundImage: `url(${ bgImage})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
@@ -119,5 +121,7 @@
       </div>
       </div>
       </div>
+      </FadeInSection>
+     
     );
   }

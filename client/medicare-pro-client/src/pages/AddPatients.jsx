@@ -25,9 +25,8 @@ export default function AddPatient({ onAdded }) {
       try {
         const response = await axios.get("http://localhost:5000/api/doctors");
         setDoctors(response.data);
-        // Set default doctor if available
         if (response.data.length > 0 && !formData.doctor_id) {
-          setFormData(prev => ({ ...prev, doctor_id: response.data[0]._id }));
+          setFormData(prev => ({ ...prev, doctor_id: response.data._id }));
         }
       } catch (err) {
         console.error("Error fetching doctors:", err);
@@ -59,7 +58,6 @@ export default function AddPatient({ onAdded }) {
     }
 
     try {
-      // Always get token from context (fresh after login), fallback to localStorage
       const token = user?.token || localStorage.getItem("token") || "";
 
       const data = new FormData();
@@ -86,7 +84,7 @@ export default function AddPatient({ onAdded }) {
         doctor_id: "",
       });
       setImageFile(null);
-      if (onAdded) onAdded(res.data); // callback to parent if needed
+      if (onAdded) onAdded(res.data);
     } catch (err) {
       setError(err.response?.data?.message || "Error adding patient");
     } finally {
@@ -97,116 +95,115 @@ export default function AddPatient({ onAdded }) {
   return (
     <FadeInSection>
       <div
-      className="min-h-screen flex items-center justify-center"
-      style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      <div className="flex flex-col justify-center w-1/2 px-16 text-black">
-        <h1 className="text-5xl font-bold mb-4">
-          Welcome to Medicare <span className="text-cyan-500">Pro</span>
-        </h1>
-        <p className="mb-6 text-lg max-w-lg text-gray-800">
-          Your trusted partner in healthcare management. Seamlessly manage your patients, appointments, and medical records anytime, anywhere — all with the security and privacy you deserve.
-        </p>
+        className="min-h-screen flex flex-col lg:flex-row items-center justify-center mt-14"
+        style={{
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* Info Panel */}
+        <div className="w-full lg:w-1/2 px-4 sm:px-8 lg:px-16 text-black flex flex-col justify-center items-center lg:items-start mb-8 lg:mb-0">
+          <h1 className="text-3xl sm:text-5xl font-bold mb-4 text-center lg:text-left">
+            Welcome to Medicare <span className="text-cyan-500">Pro</span>
+          </h1>
+          <p className="mb-6 text-base sm:text-lg max-w-lg text-gray-800 text-center lg:text-left">
+            Your trusted partner in healthcare management. Seamlessly manage your patients, appointments, and medical records anytime, anywhere — all with the security and privacy you deserve.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="w-full max-w-md sm:max-w-lg mx-auto p-4 sm:p-6 bg-white rounded shadow-md min-h-[380px] sm:min-h-[520px] flex flex-col justify-center">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-6">Add New Patient</h2>
+          {error && <p className="text-red-600 mb-2">{error}</p>}
+          {success && <p className="text-green-600 mb-2">{success}</p>}
+
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <div className="flex-1">
+              <label className="block mb-2 font-medium" htmlFor="name">Name *</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm sm:text-base"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block mb-2 font-medium" htmlFor="doctor_id">Doctor *</label>
+              <select
+                id="doctor_id"
+                name="doctor_id"
+                value={formData.doctor_id}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm sm:text-base"
+              >
+                <option value="">Select a doctor</option>
+                {doctors.map((doctor) => (
+                  <option key={doctor._id} value={doctor._id}>
+                    {doctor.name} - {doctor.specialization} ({doctor.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <div className="flex-1">
+              <label className="block mb-2 font-medium" htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm sm:text-base"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block mb-2 font-medium" htmlFor="phone">Phone</label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm sm:text-base"
+              />
+            </div>
+          </div>
+
+          <label className="block mb-2 font-medium" htmlFor="description">Description</label>
+          <textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            rows={3}
+            className="w-full border border-gray-300 rounded px-3 py-2 mb-4 text-sm sm:text-base"
+          ></textarea>
+
+          <label className="block mb-2 font-medium" htmlFor="image">Patient Image</label>
+          <input
+            type="file"
+            id="image"
+            name="image"
+            accept="image/png, image/jpeg"
+            onChange={handleFileChange}
+            className="mb-6"
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-cyan-600 text-white py-2 rounded hover:bg-cyan-700 transition"
+          >
+            {loading ? "Saving..." : "Add Patient"}
+          </button>
+        </form>
       </div>
-
-      <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white rounded shadow-md mt-16 w-full">
-        <h2 className="text-2xl font-semibold mb-6">Add New Patient</h2>
-
-        {error && <p className="text-red-600 mb-2">{error}</p>}
-        {success && <p className="text-green-600 mb-2">{success}</p>}
-
-        <div className="flex gap-4 mb-4">
-          <div className="flex-1">
-            <label className="block mb-2 font-medium" htmlFor="name">Name *</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-          <div className="flex-1">
-            <label className="block mb-2 font-medium" htmlFor="doctor_id">Doctor *</label>
-            <select
-              id="doctor_id"
-              name="doctor_id"
-              value={formData.doctor_id}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            >
-              <option value="">Select a doctor</option>
-              {doctors.map((doctor) => (
-                <option key={doctor._id} value={doctor._id}>
-                  {doctor.name} - {doctor.specialization} ({doctor.email})
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="flex gap-4 mb-4">
-          <div className="flex-1">
-            <label className="block mb-2 font-medium" htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-          <div className="flex-1">
-            <label className="block mb-2 font-medium" htmlFor="phone">Phone</label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-        </div>
-
-        <label className="block mb-2 font-medium" htmlFor="description">Description</label>
-        <textarea
-          id="description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          rows={3}
-          className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
-        ></textarea>
-
-        <label className="block mb-2 font-medium" htmlFor="image">Patient Image</label>
-        <input
-          type="file"
-          id="image"
-          name="image"
-          accept="image/png, image/jpeg"
-          onChange={handleFileChange}
-          className="mb-6"
-        />
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-cyan-600 text-white py-2 rounded hover:bg-cyan-700 transition"
-        >
-          {loading ? "Saving..." : "Add Patient"}
-        </button>
-      </form>
-    </div>
     </FadeInSection>
-    
   );
 }

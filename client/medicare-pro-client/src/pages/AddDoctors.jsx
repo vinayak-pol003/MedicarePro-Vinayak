@@ -50,7 +50,6 @@ export default function AddDoctor({ onAdded }) {
 
     try {
       const token = user?.token || localStorage.getItem("token") || "";
-
       // 1. Create the doctor in Doctor model (do NOT send password field)
       const doctorData = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
@@ -100,32 +99,31 @@ export default function AddDoctor({ onAdded }) {
   return (
     <FadeInSection>
       <div
-        className="min-h-screen flex items-center justify-center"
+        className="min-h-screen flex flex-col lg:flex-row items-center justify-center "
         style={{
           backgroundImage: `url(${bgImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        <div className="flex flex-col justify-center w-1/2 px-16 text-black">
-          <h1 className="text-5xl font-bold mb-4">
+        <div className="w-full lg:w-1/2 px-4 sm:px-8 lg:px-16 text-black flex flex-col justify-center items-center lg:items-start mb-8 lg:mb-0">
+          <h1 className="text-3xl sm:text-5xl font-bold mb-4 text-center lg:text-left">
             Add <span className="text-cyan-500">Doctor</span>
           </h1>
-          <p className="mb-6 text-lg max-w-lg text-gray-800">
+          <p className="mb-6 text-base sm:text-lg max-w-lg text-gray-800 text-center lg:text-left">
             Expand your team with specialized, experienced doctors. Upload credentials and bio for patient transparency.
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="max-w-2xl mx-auto p-6 bg-white rounded shadow-md mt-17 w-full"
+          className="w-full max-w-md sm:max-w-2xl mx-auto p-4 sm:p-6 bg-white rounded shadow-md min-h-[380px] sm:min-h-[580px] flex flex-col justify-center mt-18"
         >
-          <h2 className="text-2xl font-semibold mb-6">Add New Doctor</h2>
-
+          <h2 className="text-xl sm:text-2xl font-semibold mb-6">Add New Doctor</h2>
           {error && <p className="text-red-600 mb-2">{error}</p>}
           {success && <p className="text-green-600 mb-2">{success}</p>}
 
-          <div className="flex gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className="flex-1">
               <label className="block mb-2 font-medium" htmlFor="name">Name *</label>
               <input
@@ -135,7 +133,7 @@ export default function AddDoctor({ onAdded }) {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm sm:text-base"
               />
             </div>
             <div className="flex-1">
@@ -147,12 +145,12 @@ export default function AddDoctor({ onAdded }) {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm sm:text-base"
               />
             </div>
           </div>
 
-          <div className="flex gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className="flex-1">
               <label className="block mb-2 font-medium" htmlFor="phone">Phone</label>
               <input
@@ -161,7 +159,7 @@ export default function AddDoctor({ onAdded }) {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm sm:text-base"
               />
             </div>
             <div className="flex-1">
@@ -173,13 +171,13 @@ export default function AddDoctor({ onAdded }) {
                 value={formData.specialization}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm sm:text-base"
                 placeholder="E.g. Cardiology"
               />
             </div>
           </div>
 
-          <div className="flex gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className="flex-1">
               <label className="block mb-2 font-medium" htmlFor="experience">Experience (yrs)</label>
               <input
@@ -189,7 +187,7 @@ export default function AddDoctor({ onAdded }) {
                 name="experience"
                 value={formData.experience}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm sm:text-base"
               />
             </div>
             <div className="flex-1">
@@ -201,7 +199,7 @@ export default function AddDoctor({ onAdded }) {
                 name="consultation_fee"
                 value={formData.consultation_fee}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm sm:text-base"
               />
             </div>
           </div>
@@ -213,7 +211,7 @@ export default function AddDoctor({ onAdded }) {
             name="qualification"
             value={formData.qualification}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+            className="w-full border border-gray-300 rounded px-3 py-2 mb-4 text-sm sm:text-base"
             placeholder="E.g. MBBS, MD"
           />
 
@@ -224,7 +222,7 @@ export default function AddDoctor({ onAdded }) {
             value={formData.bio}
             onChange={handleChange}
             rows={3}
-            className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+            className="w-full border border-gray-300 rounded px-3 py-2 mb-4 text-sm sm:text-base"
             placeholder="Short introduction, expertise and interests"
           ></textarea>
 
@@ -246,7 +244,7 @@ export default function AddDoctor({ onAdded }) {
             value={formData.password}
             onChange={handleChange}
             required
-            className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+            className="w-full border border-gray-300 rounded px-3 py-2 mb-4 text-sm sm:text-base"
           />
 
           <div className="flex items-center mb-6">

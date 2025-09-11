@@ -47,6 +47,23 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/appointment-counts", async (req, res) => {
+  try {
+    // Fetch all doctors
+    const doctors = await Doctor.find({}, "_id name");
+    // For each doctor: count their appointments
+    const stats = await Promise.all(
+      doctors.map(async (doc) => {
+        const count = await Appointment.countDocuments({ doctor_id: doc._id });
+        return { name: doc.name, appointmentsCount: count };
+      })
+    );
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch appointment counts." });
+  }
+});
+
 // Get doctor by ID
 router.get("/:id", async (req, res) => {
   try {

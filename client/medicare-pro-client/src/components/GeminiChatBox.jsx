@@ -33,8 +33,8 @@ export default function GeminiChatBox() {
   };
 
   return (
-    <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-12 flex flex-col items-center mt-18">
-      <h2 className="text-3xl font-extrabold mb-6 text-cyan-700 text-center tracking-tight">AI Health Chat Support</h2>
+    <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-4 sm:p-8 flex flex-col items-center mt-8 sm:mt-18">
+      <h2 className="text-2xl sm:text-3xl font-extrabold mb-4 sm:mb-6 text-cyan-700 text-center tracking-tight">AI Health Chat Support</h2>
       <form
         onSubmit={handleAsk}
         className="w-full flex flex-col items-center"
@@ -44,11 +44,11 @@ export default function GeminiChatBox() {
           value={input}
           onChange={e => setInput(e.target.value)}
           placeholder="Type your question..."
-          className="w-full border border-cyan-300 bg-gray-50 px-5 py-4 rounded-lg mb-6 text-lg focus:outline-none focus:border-cyan-500 transition shadow-sm"
+          className="w-full border border-cyan-300 bg-gray-50 px-3 sm:px-5 py-3 sm:py-4 rounded-lg mb-4 sm:mb-6 text-base sm:text-lg focus:outline-none focus:border-cyan-500 transition shadow-sm"
           disabled={loading}
         />
         <button
-          className="bg-cyan-600 text-white px-6 py-3 rounded-lg w-full text-lg font-semibold hover:bg-cyan-700 active:scale-95 transition flex items-center justify-center"
+          className="bg-cyan-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg w-full text-base sm:text-lg font-semibold hover:bg-cyan-700 active:scale-95 transition flex items-center justify-center"
           type="submit"
           disabled={loading || !input.trim()}
         >
@@ -63,23 +63,23 @@ export default function GeminiChatBox() {
         </button>
       </form>
       {error && (
-        <div className="mt-6 text-red-600 text-lg w-full text-center border border-red-200 rounded-lg py-3 bg-red-50 shadow">
+        <div className="mt-4 sm:mt-6 text-red-600 text-base sm:text-lg w-full text-center border border-red-200 rounded-lg py-2 sm:py-3 bg-red-50 shadow">
           {error}
         </div>
       )}
       {reply && (
         <div
-    className="mt-8 w-full min-h-[4rem] max-h-[32rem] overflow-auto bg-gray-50 border border-cyan-200 rounded-xl px-6 py-6 text-cyan-900 text-lg shadow transition-all duration-300"
-    style={{
-      height: 'auto',          // Allow flexible height
-      whiteSpace: 'pre-line',  // Preserve line breaks
-    }}
-  >
-    <strong className="block mb-2 text-cyan-700">Ai:</strong>
-    {reply.split('\n').map((line, i) =>
-      <div key={i} className="mb-1">{line}</div>
-    )}
-  </div>
+          className="mt-6 sm:mt-8 w-full min-h-[4rem] max-h-[32rem] overflow-auto bg-gray-50 border border-cyan-200 rounded-xl px-3 sm:px-6 py-3 sm:py-6 text-cyan-900 text-base sm:text-lg shadow transition-all duration-300"
+          style={{
+            height: 'auto',
+            whiteSpace: 'pre-line',
+          }}
+        >
+          <strong className="block mb-1 sm:mb-2 text-cyan-700">Ai:</strong>
+          {reply.split('\n').map((line, i) =>
+            <div key={i} className="mb-1">{line}</div>
+          )}
+        </div>
       )}
       <style>
         {`

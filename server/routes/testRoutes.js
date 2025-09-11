@@ -92,7 +92,6 @@ router.get("/profile", authMiddleware, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 // ------------------- PATIENTS -------------------
 // Get all patients (admin & doctor only)
 router.get("/patients", authMiddleware, roleCheck(["admin", "doctor"]), async (req, res) => {
@@ -294,6 +293,9 @@ router.get(
     }
   }
 );
+
+
+
 
 
 // Create appointment (always links to existing patient by _id)

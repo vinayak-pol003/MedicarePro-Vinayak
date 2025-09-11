@@ -9,19 +9,19 @@ const ReferFriendCard = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-8 mt-16 h-110 w-full">
-      <h1 className="text-xl font-bold mb-2">Refer a Friend</h1>
-      <p className="text-gray-500 mb-6">
+    <div className="max-w-2xl w-full mx-auto bg-white rounded-xl shadow-md p-4 sm:p-8 mt-8 sm:mt-16 h-auto">
+      <h1 className="text-xl sm:text-2xl font-bold mb-2">Refer a Friend</h1>
+      <p className="text-gray-500 mb-6 text-sm sm:text-base">
         Share your referral code and earn rewards when friends join
       </p>
       <div className="mb-4">
-        <div className="font-medium mb-1">Referral Code</div>
+        <div className="font-medium mb-1 text-sm sm:text-base">Referral Code</div>
         <div className="relative">
           <input
             type="text"
             value={referralCode}
             disabled
-            className="w-full bg-gray-100 rounded-md px-4 py-2 pr-10"
+            className="w-full bg-gray-100 rounded-md px-2 sm:px-4 py-2 pr-10 text-sm sm:text-base"
           />
           <button
             type="button"
@@ -44,13 +44,13 @@ const ReferFriendCard = () => {
         </div>
       </div>
       <div className="mb-4">
-        <div className="font-medium mb-1">Referral Link</div>
+        <div className="font-medium mb-1 text-sm sm:text-base">Referral Link</div>
         <div className="relative">
           <input
             type="text"
             value={referralLink}
             disabled
-            className="w-full bg-gray-100 rounded-md px-4 py-2 pr-10"
+            className="w-full bg-gray-100 rounded-md px-2 sm:px-4 py-2 pr-10 text-sm sm:text-base"
           />
           <button
             type="button"
@@ -74,13 +74,13 @@ const ReferFriendCard = () => {
       </div>
       <hr className="my-6" />
       <div>
-        <span className="font-semibold text-base">5 successful referrals</span>
+        <span className="font-semibold text-base sm:text-lg">5 successful referrals</span>
         <div className="text-gray-600 text-sm mb-4">
           You've earned 250 bonus points
         </div>
         <button
           type="button"
-          className="bg-cyan-600 text-white py-2 px-6 rounded-md float-right"
+          className="bg-cyan-600 text-white py-2 px-4 sm:px-6 rounded-md w-full sm:w-auto block sm:float-right"
         >
           Invite Friends
         </button>

@@ -38,7 +38,7 @@ export default function Navbar() {
       {/* Logo Left */}
       <div className="flex items-center space-x-3">
         <div className="bg-cyan-600 text-white w-9 h-9 flex items-center justify-center rounded-full font-bold">
-          M
+          <Link to={"/"}>M</Link>
         </div>
         <h1 className="text-xl font-bold text-gray-800">
           Medicare <span className="text-cyan-600">Pro</span>

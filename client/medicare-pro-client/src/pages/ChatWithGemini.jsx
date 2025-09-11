@@ -4,7 +4,7 @@ import bgImage from '../assets/bg.png';
 export default function ChatWithGemini() {
   return (
     <div
-      className="min-h-screen flex items-center justify-center"
+      className="min-h-screen flex flex-col lg:flex-row items-center justify-center"
       style={{
         backgroundImage: `url(${bgImage})`,
         backgroundSize: "cover",
@@ -12,11 +12,11 @@ export default function ChatWithGemini() {
       }}
     >
       {/* Left Info Panel (clean, no overlay) */}
-      <div className="flex flex-col justify-center w-1/2 px-16 text-black">
-        <h1 className="text-5xl font-bold mb-4">
+      <div className="w-full lg:w-1/2 px-4 sm:px-8 lg:px-16 text-black flex flex-col justify-center items-center lg:items-start mb-8 lg:mb-0">
+        <h1 className="text-3xl sm:text-5xl font-bold mb-4 text-center lg:text-left">
           Welcome to Medicare <span className="text-cyan-500">Pro</span>
         </h1>
-        <p className="mb-6 text-lg max-w-lg text-gray-800">
+        <p className="mb-6 text-base sm:text-lg max-w-lg text-gray-800 text-center lg:text-left">
           Seamlessly book and track appointments.<br />
           Your care experience starts here.
         </p>
@@ -24,7 +24,7 @@ export default function ChatWithGemini() {
       </div>
 
       {/* Right GeminiChatBox panel, styled like form card */}
-      <div className="w-[40rem] max-w-xl mx-auto p-1 flex flex-col justify-center items-center">
+      <div className="w-full max-w-md sm:max-w-xl mx-auto p-1 flex flex-col justify-center items-center">
         <GeminiChatBox />
       </div>
     </div>

@@ -12,7 +12,7 @@ router.post('/api/gemini-chat', async (req, res) => {
   }
 
   // Prompt instruction
-  userPrompt = `Reply ONLY with brief, clear bullet points if more content. Be concise, friendly, and helpful:\n\n${userPrompt}`;
+  userPrompt = `Reply ONLY with brief, clear points if more content. Be concise, friendly, and helpful:\n\n${userPrompt}`;
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {

@@ -36,7 +36,7 @@ export default function Dashboard() {
           API.get("/doctors"),
           API.get("/patients"),
           API.get("/appointments"),
-          API.get(`/appointments/today`),
+          API.get("/appointments/today"),
         ]);
         setStats({
           totalDoctors: Array.isArray(doctorsRes.data) ? doctorsRes.data.length : 0,
@@ -91,17 +91,17 @@ export default function Dashboard() {
           <div className="rounded-xl bg-[#e6f3ff] p-6 shadow flex flex-col items-start">
             <span className="uppercase text-xs text-gray-500 font-semibold mb-1">Doctors</span>
             <span className="text-3xl font-bold text-gray-800">{stats.totalDoctors}</span>
-            <span className="text-green-500 font-medium text-xs mt-2">+1.4% ↗</span>
+            <span className="text-green-500 font-medium text-xs mt-2">+1.0% ↗</span>
           </div>
           <div className="rounded-xl bg-[#e5f8f8] p-6 shadow flex flex-col items-start">
             <span className="uppercase text-xs text-gray-500 font-semibold mb-1">Patients</span>
             <span className="text-3xl font-bold text-gray-800">{stats.totalPatients}</span>
-            <span className="text-green-500 font-medium text-xs mt-2">0.5%</span>
+            <span className="text-green-500 font-medium text-xs mt-2">2.5%</span>
           </div>
           <div className="rounded-xl bg-[#edf5ff] p-6 shadow flex flex-col items-start">
             <span className="uppercase text-xs text-gray-500 font-semibold mb-1">Appointments</span>
             <span className="text-3xl font-bold text-gray-800">{stats.totalAppointments}</span>
-            <span className="text-green-500 font-medium text-xs mt-2">+2.7% ↗</span>
+            <span className="text-green-500 font-medium text-xs mt-2">+0.7% ↗</span>
           </div>
           <div className="rounded-xl bg-[#eef6fc] p-6 shadow flex flex-col items-start">
             <span className="uppercase text-xs text-gray-500 font-semibold mb-1">Today's Appointments</span>

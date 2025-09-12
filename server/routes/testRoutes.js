@@ -274,25 +274,33 @@ router.get(
 );
 
 
-router.get(
-  "/appointments/today",
-  authMiddleware,
-  roleCheck(["admin", "doctor"]),
-  async (req, res) => {
-    try {
-      // Get today's date string in YYYY-MM-DD format
-      const today = new Date().toISOString().slice(0, 10);
-      // Find only appointments for today
-      const appointments = await Appointment.find({ date: today })
+  router.get(
+    "/appointments/today",
+    authMiddleware,
+    roleCheck(["admin", "doctor"]),
+    async (req, res) => {
+      try {
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+        const appointments = await Appointment.find({
+          date: {
+            $gte: startOfDay,
+            $lt: endOfDay,
+          }
+        })
         .populate("patient_id", "name email")
         .populate("doctor_id", "name email specialization")
         .populate("prescription");
-      res.json(appointments);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
+
+        res.json(appointments);
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
     }
-  }
-);
+  );
+
 
 
 

@@ -137,10 +137,10 @@ export default function Doctors() {
                   <div className="w-12 sm:w-16 h-12 sm:h-16 bg-cyan-100 rounded-full flex items-center justify-center">
                     {doctor.image ? (
                       <img
-                        src={`http://localhost:5000${doctor.image}`}
-                        alt={doctor.name}
-                        className="w-12 sm:w-16 h-12 sm:h-16 rounded-full object-cover"
-                      />
+                        src={doctor.image}
+                          alt={doctor.name}
+                          className="w-12 sm:w-16 h-12 sm:h-16 rounded-full object-cover"
+                        />
                     ) : (
                       <svg
                         className="w-8 h-8 text-cyan-600"

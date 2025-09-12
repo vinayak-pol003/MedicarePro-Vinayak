@@ -3,6 +3,7 @@ import axios from "axios";
 import bgImage from "../assets/bg.png";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade.jsx";
+import imagekit from "../utils/imagekit.jsx"; // <-- Import your utility
 
 export default function AddPatient({ onAdded }) {
   const { user } = useContext(AuthContext);
@@ -26,7 +27,7 @@ export default function AddPatient({ onAdded }) {
         const response = await axios.get("http://localhost:5000/api/doctors");
         setDoctors(response.data);
         if (response.data.length > 0 && !formData.doctor_id) {
-          setFormData(prev => ({ ...prev, doctor_id: response.data._id }));
+          setFormData(prev => ({ ...prev, doctor_id: response.data[0]._id }));
         }
       } catch (err) {
         console.error("Error fetching doctors:", err);
@@ -41,56 +42,90 @@ export default function AddPatient({ onAdded }) {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // File input handler with image validation
   const handleFileChange = (e) => {
-    setImageFile(e.target.files[0]);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setLoading(true);
-
-    if (!formData.name || !formData.doctor_id) {
-      setError("Name and Doctor are required");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const token = user?.token || localStorage.getItem("token") || "";
-
-      const data = new FormData();
-      data.append("name", formData.name);
-      data.append("email", formData.email);
-      data.append("phone", formData.phone);
-      data.append("description", formData.description);
-      data.append("doctor_id", formData.doctor_id);
-      if (imageFile) data.append("image", imageFile);
-
-      const res = await axios.post("http://localhost:5000/api/patients", data, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setSuccess("Patient added successfully!");
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        description: "",
-        doctor_id: "",
-      });
+    const file = e.target.files[0];
+    if (file && (file.type === "image/jpeg" || file.type === "image/png")) {
+      setImageFile(file);
+      setError("");
+    } else {
       setImageFile(null);
-      if (onAdded) onAdded(res.data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Error adding patient");
-    } finally {
-      setLoading(false);
+      setError("Please select a valid image (.jpg or .png)");
     }
   };
+
+  // Upload image to ImageKit and send cloud URL to backend
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setSuccess("");
+  setLoading(true);
+
+  if (!formData.name || !formData.doctor_id) {
+    setError("Name and Doctor are required");
+    setLoading(false);
+    return;
+  }
+
+  let imageUrl = "";
+  try {
+    // Fetch authentication params from backend manually
+    const res = await fetch("http://localhost:5000/api/imagekit-auth");
+    const authParams = await res.json(); // { token, signature, expire }
+
+    if (imageFile) {
+      imageUrl = await new Promise((resolve, reject) => {
+        imagekit.upload(
+          {
+            file: imageFile,
+            fileName: imageFile.name,
+            folder: "MedicareImages",
+            token: authParams.token,
+            signature: authParams.signature,
+            expire: authParams.expire,
+          },
+          (err, result) => {
+            if (err) {
+              setError("Image upload failed");
+              reject(err.message || "Image upload failed");
+            } else resolve(result.url);
+          }
+        );
+      });
+    }
+
+    const token = user?.token || localStorage.getItem("token") || "";
+
+    const payload = {
+      ...formData,
+      image: imageUrl
+    };
+
+    const apiRes = await axios.post("http://localhost:5000/api/patients", payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setSuccess("Patient added successfully!");
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      description: "",
+      doctor_id: "",
+    });
+    setImageFile(null);
+    if (onAdded) onAdded(apiRes.data);
+  } catch (err) {
+    setError(
+      (typeof err === "string" && err) ||
+      err.response?.data?.message ||
+      "Error adding patient"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <FadeInSection>

@@ -10,11 +10,25 @@ import prescriptionRoutes from "./routes/prescriptionRoutes.js";
 import path from "path";
 import "./uploads.js"; // Ensure uploads directory exists
 import geminiChatRoute from './routes/geminiChatRoute.js';
+import ImageKit from "imagekit";
+
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+const imagekit = new ImageKit({
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+});
+
+
+app.get("/api/imagekit-auth", (req, res) => {
+  const authParams = imagekit.getAuthenticationParameters();
+  res.json(authParams);
+});
 
 
 // Check MONGO_URI Loaded
@@ -44,7 +58,7 @@ app.use("/api/prescriptions", prescriptionRoutes);
 
 app.use(geminiChatRoute);
 
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+// app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Start the server
 const PORT = process.env.PORT || 5000;

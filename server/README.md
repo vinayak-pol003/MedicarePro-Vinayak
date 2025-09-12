@@ -1,127 +1,121 @@
-Backend Readme
+Medicare Pro Backend
+This document details the backend for the Medicare Pro hospital management system—the secure, scalable API serving your hospital data and workflows. Built with Node.js, Express, MongoDB, Mongoose, and now integrated with ImageKit cloud storage for profile images.
 
-------------------------------------------------------------------------------------------------------------------------------------------------
-
-Medicare Pro
-This document details the backend of the Medicare Pro hospital management system, which serves as the core API for the frontend application. It's built using the MERN stack, providing a robust and scalable solution for managing hospital data.
-
-
-------------------------------------------------------------------------------------------------------------------------------------------------
-
+-----------------------------------------------------------------------------------------------------------------------------------------
 
 🛠️ Tech Stack
-Node.js: A JavaScript runtime for building server-side applications.
+Node.js: Server-side runtime
 
-Express.js: A fast, unopinionated, minimalist web framework for Node.js.
+Express.js: Minimalist web framework
 
-MongoDB: A NoSQL document database for storing application data.
+MongoDB: NoSQL cloud database
 
-Mongoose: An Object Data Modeling (ODM) library for MongoDB and Node.js.
+Mongoose: ODM for schema modeling
 
-JWT (JSON Web Tokens): For secure, stateless authentication.
+JWT (JSON Web Tokens): Stateless authentication
 
-------------------------------------------------------------------------------------------------------------------------------------------------
+ImageKit: Secure cloud CDN for patient/doctor images
+
+---------------------------------------------------------------------------------------------------------------------------------------
 
 📁 Project Structure
-The backend code is organized into a logical folder structure to ensure maintainability and scalability.
-
+text
 /server
-├── models/             # Mongoose Schemas (User, Patient, Appointment, Prescription)
-├── routes/             # API Routes
-├── middleware/         # Custom Middleware (Auth, Role-based access)
-├── uploads/            # File uploads directory
-├── server.js           # Main server entry file
+├── models/             # Mongoose Schemas (User, Patient, Doctor, Appointment, Prescription)
+├── routes/             # API Route handlers
+├── middleware/         # Auth & role middleware
+├── index.js            # Main server entry point
 └── package.json
+(Removed local uploads directory—now using ImageKit cloud delivery)
 
-------------------------------------------------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------------------------------------
 
 ⚙️ Installation and Setup
 Navigate to the server folder:
 
-Bash
-
+bash
 cd medicare-pro/server
 Install dependencies:
 
-Bash
-
+bash
 npm install
-Create a .env file:
-Create a .env file in the server directory and add the following environment variables:
+Create a .env file with:
 
-------------------------------------------------------------------------------------------------------------------------------------------------
-
-Plaintext
-
+text
 MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/medicare
 JWT_SECRET=your_jwt_secret
 PORT=5000
-MONGO_URI: Your MongoDB connection string.
+IMAGEKIT_PUBLIC_KEY=your_imagekit_public_key
+IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
+IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/<your_imagekit_id>
+MONGO_URI: Your cloud MongoDB URI
 
-JWT_SECRET: A strong, random string for signing JWTs.
+JWT_SECRET: Use a secure random string
 
-PORT: The port the server will run on.
+PORT: Server port
 
-------------------------------------------------------------------------------------------------------------------------------------------------
+IMAGEKIT_PUBLIC_KEY / PRIVATE_KEY / URL_ENDPOINT: Get these from your ImageKit account
 
-Run the backend server:
+Run backend server:
 
-Bash
-
+bash
 npm run dev
-The server will start on the port specified in your .env file (default is 5000).
-
-------------------------------------------------------------------------------------------------------------------------------------------------
-
-🔑 API Endpoints
-The following is a list of the main API endpoints provided by the backend:
-
-Auth:
-
-POST /api/auth/signup – Register a new user.
-
-POST /api/auth/login – Authenticate and log in a user.
-
-POST /api/auth/logout – Log out a user.
-
-------------------------------------------------------------------------------------------------------------------------------------------------
-
-Patients:
-
-GET /api/patients – Get all patients (Admin/Receptionist).
-
-POST /api/patients – Add a new patient.
-
-GET /api/patients/:id – Get a single patient's profile.
-
-------------------------------------------------------------------------------------------------------------------------------------------------
-
-Appointments:
-
-GET /api/appointments – Get all appointments.
-
-POST /api/appointments – Create a new appointment.
-
-------------------------------------------------------------------------------------------------------------------------------------------------
-
-Prescriptions:
-
-POST /api/prescriptions/:appointmentId – Doctors can add a prescription to a specific appointment.
-
-GET /api/prescriptions/:appointmentId – Get a prescription for a specific appointment.
-
-GET /api/prescriptions/my – Patients can get a list of their prescriptions.
+Server starts at your defined port (default: 5000).
 
 
-------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------
+
+🔑 Main API Endpoints
+Auth
+
+POST /api/auth/signup — Register user
+
+POST /api/auth/login — Authenticate/login
+
+POST /api/auth/logout — Logout user
+
+Patients
+
+GET /api/patients — List all patients
+
+POST /api/patients — Add new patient (accepts image field as ImageKit CDN URL)
+
+GET /api/patients/:id — Patient profile
+
+Doctors
+
+GET /api/doctors — List doctors
+
+POST /api/doctors — Add doctor (accepts image field as ImageKit CDN URL)
+
+GET /api/doctors/:id — Doctor profile
+
+Appointments
+
+GET /api/appointments — All appointments
+
+POST /api/appointments — Create appointment
+
+Prescriptions
+
+POST /api/prescriptions/:appointmentId — Doctor adds prescription
+
+GET /api/prescriptions/:appointmentId — Get prescription by appointment
+
+GET /api/prescriptions/my — Patient’s prescriptions
+
+ImageKit Cloud
+
+GET /api/imagekit-auth — Frontend uses this to securely upload images to ImageKit CDN
+
+---------------------------------------------------------------------------------------------------------------------------------------
 
 🚀 Deployment
-You can easily deploy the backend to a cloud provider like Render or Vercel.
+Push /server to your GitHub repo
 
-Push the server directory to a GitHub repository.
+Create a Render/Railway/Vercel project for the backend
 
-Create a new project on your chosen platform (e.g., Render, Railway).
+Add all env variables in the platform’s settings (MONGO_URI, JWT_SECRET, IMAGEKIT keys)
 
-Add your environment variables (MONGO_URI, JWT_SECRET) in the platform's settings.
-
-Initiate the deployment. Once complete, the platform will provide a public API base URL that you'll use in your frontend application.
+Deploy — platform will provide a public API base URL for your frontend

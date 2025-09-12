@@ -136,10 +136,10 @@ export default function Patients() {
               <div className="relative h-32 sm:h-48 bg-gray-200 flex items-center justify-center overflow-hidden rounded-t-lg">
                   {p.image ? (
                     <img
-                      src={`http://localhost:5000${p.image}`}
-                      alt={`${p.name} profile`}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
+                        src={p.image}
+                        alt={`${p.name} profile`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
                   ) : (
                     <span className="text-gray-400 text-xs sm:text-lg">Patient Image</span>
                   )}

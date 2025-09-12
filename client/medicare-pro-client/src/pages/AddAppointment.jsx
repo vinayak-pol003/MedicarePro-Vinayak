@@ -100,7 +100,7 @@ export default function AddAppointment({ onAdded }) {
         }}
       >
         {/* Left Info Panel */}
-        <div className="w-full lg:w-1/2 px-4 sm:px-8 lg:px-16 text-black flex flex-col justify-center items-center lg:items-start mb-8 lg:mb-0">
+        <div className="w-full lg:w-1/2 px-4 sm:px-8 lg:px-16 text-black flex flex-col justify-center items-center lg:items-start mb-8 lg:mb-0 mt-18">
           <h1 className="text-3xl sm:text-5xl font-bold mb-4 text-center lg:text-left">
             Welcome to Medicare <span className="text-cyan-500">Pro</span>
           </h1>

@@ -56,7 +56,7 @@ export default function SignIn() {
         }}
       >
         {/* Left Panel */}
-        <div className="w-full lg:w-1/2 px-4 sm:px-16 flex flex-col justify-center text-black text-center lg:text-left mb-8 lg:mb-0">
+        <div className="w-full lg:w-1/2 px-4 sm:px-16 flex flex-col justify-center text-black text-center lg:text-left mb-8 lg:mb-0 mt-17 sm:mt-24">
           <h1 className="text-2xl sm:text-5xl font-bold mb-4">Welcome Back</h1>
           <p className="mb-6 text-base sm:text-lg">
             Sign in to access your Medicare dashboard, manage appointments, and view your medical records securely.

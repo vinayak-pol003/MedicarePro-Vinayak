@@ -3,6 +3,8 @@ import axios from "axios";
 import bgImage from "../assets/bg.png";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade.jsx";
+import imagekit from "../utils/imagekit.jsx";
+
 
 export default function AddDoctor({ onAdded }) {
   const { user } = useContext(AuthContext);
@@ -33,68 +35,98 @@ export default function AddDoctor({ onAdded }) {
   };
 
   const handleFileChange = (e) => {
-    setImageFile(e.target.files[0]);
-  };
+  const file = e.target.files[0];
+  if (file && (file.type === "image/jpeg" || file.type === "image/png")) {
+    setImageFile(file);
+    setError("");
+  } else {
+    setImageFile(null);
+    setError("Please select a valid image (.jpg or .png)");
+  }
+};
+
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setLoading(true);
+  e.preventDefault();
+  setError("");
+  setSuccess("");
+  setLoading(true);
 
-    if (!formData.name || !formData.email || !formData.specialization || !formData.password) {
-      setError("Name, email, specialization and password are required");
-      setLoading(false);
-      return;
+  if (!formData.name || !formData.email || !formData.specialization || !formData.password) {
+    setError("Name, email, specialization and password are required");
+    setLoading(false);
+    return;
+  }
+
+  let imageUrl = "";
+  try {
+    if (imageFile) {
+      // Fetch auth params and upload to ImageKit cloud
+      const res = await fetch("http://localhost:5000/api/imagekit-auth");
+      const authParams = await res.json();
+
+      imageUrl = await new Promise((resolve, reject) => {
+        imagekit.upload({
+          file: imageFile,
+          fileName: imageFile.name,
+          folder: "DoctorImages",
+          token: authParams.token,
+          signature: authParams.signature,
+          expire: authParams.expire,
+        }, (err, result) => {
+          if (err) {
+            setError("Image upload failed");
+            reject(err.message || "Image upload failed");
+          } else resolve(result.url);
+        });
+      });
     }
 
-    try {
-      const token = user?.token || localStorage.getItem("token") || "";
-      // 1. Create the doctor in Doctor model (do NOT send password field)
-      const doctorData = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "password") doctorData.append(key, value);
-      });
-      if (imageFile) doctorData.append("image", imageFile);
+    const token = user?.token || localStorage.getItem("token") || "";
 
-      const doctorRes = await axios.post("http://localhost:5000/api/doctors", doctorData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    // 1. Create doctor profile (send image URL, not file)
+    const doctorPayload = {
+      ...formData,
+      image: imageUrl,
+    };
+    delete doctorPayload.password; // don't send password to doctor profile
 
-      // 2. Create a user account in User model for doctor login (do NOT send image or profile-only fields)
-      await axios.post("http://localhost:5000/api/users", {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        role: "doctor",
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+    const doctorRes = await axios.post("http://localhost:5000/api/doctors", doctorPayload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      setSuccess("Doctor added and user account created!");
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        specialization: "",
-        experience: "",
-        qualification: "",
-        bio: "",
-        consultation_fee: "",
-        is_active: true,
-        password: "",
-      });
-      setImageFile(null);
-      if (onAdded) onAdded(doctorRes.data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Error adding doctor or creating account");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // 2. Create user account for doctor login
+    await axios.post("http://localhost:5000/api/users", {
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      role: "doctor",
+    }, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setSuccess("Doctor added and user account created!");
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      specialization: "",
+      experience: "",
+      qualification: "",
+      bio: "",
+      consultation_fee: "",
+      is_active: true,
+      password: "",
+    });
+    setImageFile(null);
+    if (onAdded) onAdded(doctorRes.data);
+  } catch (err) {
+    setError(err.response?.data?.message || "Error adding doctor or creating account");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <FadeInSection>

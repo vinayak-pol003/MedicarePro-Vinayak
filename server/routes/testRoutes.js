@@ -105,14 +105,43 @@ router.get("/patients", authMiddleware, roleCheck(["admin", "doctor"]), async (r
 
 
 // Create patient (doctor and admin allowed)
+// router.post(
+//   "/patients",
+//   authMiddleware,
+//   roleCheck(["doctor", "admin"]),
+//   upload.single("image"),
+//   async (req, res) => {
+//     try {
+//       const { name, email, phone, description, doctor_id } = req.body;
+//       if (!name || !doctor_id)
+//         return res.status(400).json({ message: "Name and doctor_id are required" });
+
+//       if (!mongoose.Types.ObjectId.isValid(doctor_id))
+//         return res.status(400).json({ message: "Invalid doctor ID format." });
+
+//       const doctor = await Doctor.findById(doctor_id);
+//       if (!doctor) return res.status(400).json({ message: "Selected doctor not found" });
+
+//       const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+//       const newPatient = new Patient({ name, email, phone, description, doctor_id, image });
+
+//       await newPatient.save();
+//       res.status(201).json(newPatient);
+//     } catch (err) {
+//       res.status(500).json({ error: err.message });
+//     }
+//   }
+// );
+
 router.post(
   "/patients",
   authMiddleware,
   roleCheck(["doctor", "admin"]),
-  upload.single("image"),
   async (req, res) => {
     try {
-      const { name, email, phone, description, doctor_id } = req.body;
+      const { name, email, phone, description, doctor_id, image } = req.body; 
+      // image is a string (ImageKit CDN URL) sent from frontend
+
       if (!name || !doctor_id)
         return res.status(400).json({ message: "Name and doctor_id are required" });
 
@@ -122,16 +151,16 @@ router.post(
       const doctor = await Doctor.findById(doctor_id);
       if (!doctor) return res.status(400).json({ message: "Selected doctor not found" });
 
-      const image = req.file ? `/uploads/${req.file.filename}` : undefined;
       const newPatient = new Patient({ name, email, phone, description, doctor_id, image });
-
       await newPatient.save();
+
       res.status(201).json(newPatient);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   }
 );
+
 
 router.delete(
   "/patients/:id",

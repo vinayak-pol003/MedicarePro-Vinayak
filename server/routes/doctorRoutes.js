@@ -82,7 +82,54 @@ router.get("/:id", async (req, res) => {
 });
 
 // Create doctor
-router.post("/", upload.single("image"), async (req, res) => {
+// router.post("/", upload.single("image"), async (req, res) => {
+//   try {
+//     const {
+//       name,
+//       email,
+//       phone,
+//       specialization,
+//       experience,
+//       qualification,
+//       bio,
+//       consultation_fee,
+//     } = req.body;
+
+//     if (!name || !email || !specialization) {
+//       return res.status(400).json({
+//         message: "Name, email, and specialization are required",
+//       });
+//     }
+
+//     // Check if email already exists
+//     const existingEmail = await Doctor.findOne({ email });
+//     if (existingEmail) {
+//       return res.status(400).json({ message: "Email already exists" });
+//     }
+
+//     const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+
+//     const newDoctor = new Doctor({
+//       name,
+//       email,
+//       phone,
+//       specialization,
+//       experience: experience || 0,
+//       qualification,
+//       bio,
+//       consultation_fee: consultation_fee || 0,
+//       image,
+//     });
+
+//     await newDoctor.save();
+//     res.status(201).json(newDoctor);
+//   } catch (err) {
+//     console.error("Error creating doctor:", err);
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+router.post("/", async (req, res) => {
   try {
     const {
       name,
@@ -93,6 +140,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       qualification,
       bio,
       consultation_fee,
+      image // ImageKit CDN URL from frontend
     } = req.body;
 
     if (!name || !email || !specialization) {
@@ -107,8 +155,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    const image = req.file ? `/uploads/${req.file.filename}` : undefined;
-
+    // Save the image as the CDN url (or undefined)
     const newDoctor = new Doctor({
       name,
       email,
@@ -118,7 +165,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       qualification,
       bio,
       consultation_fee: consultation_fee || 0,
-      image,
+      image: image || undefined, // ImageKit CDN URL as string
     });
 
     await newDoctor.save();
@@ -128,6 +175,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Update doctor
 router.put("/:id", upload.single("image"), async (req, res) => {

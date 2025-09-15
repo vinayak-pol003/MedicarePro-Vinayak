@@ -12,7 +12,6 @@ import { AuthProvider } from "./contex/AuthContext.jsx";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import AddPatient from "./pages/AddPatients.jsx";
-import Admin from "./components/Admin.jsx";
 import Profile from "./pages/Profile.jsx";
 import MyAppointments from './pages/MyAppointments.jsx';
 import AddAppointment from "./pages/AddAppointment.jsx";
@@ -22,6 +21,8 @@ import ContactUs from "./pages/ContactUs.jsx";
 import AboutUs from "./pages/AboutUs.jsx";
 import AddDoctor from "./pages/AddDoctors.jsx";
 import ChatWithGemini from "./pages/ChatWithGemini.jsx";
+import PublicRoute from "./contex/PublicRoute.jsx";
+import RoleProtectedRoute from "./contex/RoleProtectedRoute.jsx";
 
 
 export default function App() {
@@ -31,23 +32,22 @@ export default function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-          <Route path="/patients" element={<PrivateRoute><Patients /></PrivateRoute>} />
-          <Route path="/appointments" element={<PrivateRoute><Appointments /></PrivateRoute>} />
-          <Route path="/doctors" element={<PrivateRoute><Doctors /></PrivateRoute>} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/addpatient" element={<AddPatient />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/my-appointments" element={<MyAppointments/>}/>
+          <Route path="/dashboard" element={<RoleProtectedRoute allowedRoles={['admin','doctor']}> <PrivateRoute><Dashboard /></PrivateRoute> </RoleProtectedRoute>} />
+          <Route path="/patients" element={<RoleProtectedRoute allowedRoles={['admin','doctor']}> <PrivateRoute><Patients /></PrivateRoute></RoleProtectedRoute>} />
+          <Route path="/appointments" element={<RoleProtectedRoute allowedRoles={['admin','doctor']}><PrivateRoute><Appointments /></PrivateRoute></RoleProtectedRoute>} />
+          <Route path="/doctors" element={<RoleProtectedRoute allowedRoles={['admin','doctor']}> <PrivateRoute><Doctors /></PrivateRoute> </RoleProtectedRoute>} />
+          <Route path="/signin" element={<PublicRoute> <SignIn />  </PublicRoute>} />
+          <Route path="/signup" element={<PublicRoute> <SignUp />  </PublicRoute>} />
+          <Route path="/addpatient" element={<RoleProtectedRoute allowedRoles={['admin','doctor']}>  <AddPatient/>  </RoleProtectedRoute>} />
+          <Route path="/my-appointments" element={<RoleProtectedRoute allowedRoles={['patient']}>  <MyAppointments/>  </RoleProtectedRoute>}/>
           <Route path="/profile" element={<Profile/>}/>
-          <Route path="/addappointment" element={<AddAppointment/>} />
-          <Route path="/doctorprescription/:id" element={<DoctorPrescription/>}/>
-          <Route path="/myprescription/:id" element={<MyPrescription/>}/>
+          <Route path="/addappointment" element={<RoleProtectedRoute allowedRoles={['admin','doctor']}><AddAppointment/>  </RoleProtectedRoute>} />
+          <Route path="/doctorprescription/:id" element={<RoleProtectedRoute allowedRoles={['admin','doctor']}>  <DoctorPrescription/>  </RoleProtectedRoute>}/>
+          <Route path="/myprescription/:id" element={<RoleProtectedRoute allowedRoles={['patient']}><MyPrescription/> </RoleProtectedRoute>}/>
           <Route path="/contactus" element={<ContactUs/>}/>
           <Route path="/aboutus" element={<AboutUs/>}/>
-          <Route path="/add-doctor" element={<AddDoctor/>}/>
-          <Route path="/chat" element={<ChatWithGemini/>} />"
+          <Route path="/add-doctor" element={<RoleProtectedRoute allowedRoles={['admin','doctor']}>  <AddDoctor/>  </RoleProtectedRoute>}/>
+          <Route path="/chat" element={<ChatWithGemini/>} />
         </Routes>
       </Router>
     </AuthProvider>

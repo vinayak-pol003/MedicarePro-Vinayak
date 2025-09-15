@@ -1,9 +1,11 @@
 import GeminiChatBox from '../components/GeminiChatBox.jsx';
 import bgImage from '../assets/bg.png';
+import FadeInSection from '../utils/Fade.jsx';
 
 export default function ChatWithGemini() {
   return (
-    <div
+    <FadeInSection>
+      <div
       className="min-h-screen flex flex-col lg:flex-row items-center justify-center"
       style={{
         backgroundImage: `url(${bgImage})`,
@@ -28,5 +30,7 @@ export default function ChatWithGemini() {
         <GeminiChatBox />
       </div>
     </div>
+    </FadeInSection>
+    
   );
 }

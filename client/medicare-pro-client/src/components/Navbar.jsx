@@ -83,6 +83,8 @@ export default function Navbar() {
 
       {/* Desktop Sign In/Out Right */}
       <div className="hidden md:flex items-center space-x-3">
+        {/* Vertical line divider */}
+        <span className="inline-block h-8 w-1 bg-gray-700"></span>
         {isLoggedIn ? (
           <button
             onClick={handleSignOut}
@@ -100,6 +102,7 @@ export default function Navbar() {
           </Link>
         )}
       </div>
+
 
       {/* Mobile Hamburger */}
       <div className="md:hidden flex items-center">

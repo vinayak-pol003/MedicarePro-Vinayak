@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import API from "../utils/api";
 import bgImage from '../assets/bg.png'
 import FadeInSection from "../utils/Fade";
+import jsPDF from "jspdf";
 
 const MyPrescription = () => {
   const { id } = useParams();
@@ -26,7 +27,7 @@ const MyPrescription = () => {
     fetchPrescription();
   }, [id]);
 
-  const handleDownload = () => {
+  const handleDownloadTXT = () => {
     if (!prescription) return;
     const content = `
 Prescription Details
@@ -58,6 +59,119 @@ ${prescription.notes || ""}
     link.href = window.URL.createObjectURL(blob);
     link.download = "prescription.txt";
     link.click();
+  };
+
+  const handleDownloadPDF = () => {
+    if (!prescription) return;
+    
+    const doc = new jsPDF();
+    let y = 20;
+
+    // Header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(6, 182, 212); // cyan-500 color
+    doc.text("MEDICARE PRO", 20, y);
+    y += 10;
+    
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Medical Prescription", 20, y);
+    y += 15;
+
+    // Patient Info
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("Patient Information:", 20, y);
+    y += 8;
+    
+    doc.setFont("helvetica", "normal");
+    doc.text(`Name: ${prescription.patient?.name || ""}`, 25, y);
+    y += 6;
+    doc.text(`Email: ${prescription.patient?.email || ""}`, 25, y);
+    y += 10;
+
+    // Doctor Info
+    doc.setFont("helvetica", "bold");
+    doc.text("Doctor Information:", 20, y);
+    y += 8;
+    
+    doc.setFont("helvetica", "normal");
+    doc.text(`Doctor: ${prescription.doctor?.name || ""}`, 25, y);
+    y += 6;
+    doc.text(`Specialization: ${prescription.doctor?.specialization || ""}`, 25, y);
+    y += 6;
+    doc.text(`Date: ${prescription.createdAt ? new Date(prescription.createdAt).toLocaleDateString() : ""}`, 25, y);
+    y += 12;
+
+    // Symptoms
+    if (prescription.symptoms) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Symptoms:", 20, y);
+      y += 8;
+      doc.setFont("helvetica", "normal");
+      const symptomsLines = doc.splitTextToSize(prescription.symptoms, 170);
+      doc.text(symptomsLines, 25, y);
+      y += symptomsLines.length * 6 + 6;
+    }
+
+    // Diagnosis
+    if (prescription.diagnosis) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Diagnosis:", 20, y);
+      y += 8;
+      doc.setFont("helvetica", "normal");
+      const diagnosisLines = doc.splitTextToSize(prescription.diagnosis, 170);
+      doc.text(diagnosisLines, 25, y);
+      y += diagnosisLines.length * 6 + 6;
+    }
+
+    // Medications
+    doc.setFont("helvetica", "bold");
+    doc.text("Prescribed Medications:", 20, y);
+    y += 8;
+    
+    if (prescription.medications && prescription.medications.length > 0) {
+      prescription.medications.forEach((med, idx) => {
+        doc.setFont("helvetica", "normal");
+        const medText = `${idx + 1}. ${med.name} - ${med.dosage}`;
+        doc.text(medText, 25, y);
+        y += 6;
+        if (med.instructions) {
+          doc.setFont("helvetica", "italic");
+          const instructionsLines = doc.splitTextToSize(`   Instructions: ${med.instructions}`, 165);
+          doc.text(instructionsLines, 25, y);
+          y += instructionsLines.length * 6;
+        }
+        y += 3;
+      });
+    } else {
+      doc.setFont("helvetica", "normal");
+      doc.text("No medications prescribed", 25, y);
+      y += 8;
+    }
+
+    // Notes
+    if (prescription.notes) {
+      y += 5;
+      doc.setFont("helvetica", "bold");
+      doc.text("Additional Notes:", 20, y);
+      y += 8;
+      doc.setFont("helvetica", "normal");
+      const notesLines = doc.splitTextToSize(prescription.notes, 170);
+      doc.text(notesLines, 25, y);
+      y += notesLines.length * 6;
+    }
+
+    // Footer
+    y += 15;
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text("This is a computer-generated prescription from Medicare Pro", 20, y);
+
+    // Save the PDF
+    doc.save(`prescription-${prescription.patient?.name || 'patient'}-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   if (loading) {
@@ -169,14 +283,20 @@ ${prescription.notes || ""}
             {/* Download & Back Buttons */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
               <button
-                onClick={handleDownload}
+                onClick={handleDownloadPDF}
                 className="bg-cyan-600 text-white px-4 py-2 rounded hover:bg-cyan-700 mb-2 sm:mb-0"
               >
-                Download Prescription
+                Download as PDF
+              </button>
+              <button
+                onClick={handleDownloadTXT}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mb-2 sm:mb-0"
+              >
+                Download as TXT
               </button>
               <Link
                 to="/my-appointments"
-                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 text-center"
               >
                 Back to Appointments
               </Link>

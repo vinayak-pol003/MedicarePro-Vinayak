@@ -11,7 +11,7 @@ const RatingStars = ({ rating = 0 }) => (
       <span
         key={i}
         style={{
-          color: i <= rating ? "#facc15" : "#d1c9e6", // yellow if filled, light gray otherwise
+          color: i <= rating ? "#facc15" : "#d1c9e6",
           fontSize: "1.15em",
           marginRight: "1px",
         }}
@@ -38,7 +38,49 @@ function formatTimeToIST(timeStr) {
 
 function shortDate(dateStr) {
   if (!dateStr) return "";
-  return dateStr.split("T");
+  const datePart = dateStr.split("T")[0];
+  return datePart;
+}
+
+// Doctor Info Modal Component with loading/error
+function DoctorInfoModal({ doctor, loading, error, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+      <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl relative">
+        <button
+          className="absolute top-2 right-3 text-lg text-gray-600"
+          onClick={onClose}
+        >
+          ×
+        </button>
+        {loading ? (
+          <div className="text-center py-10">Loading doctor details...</div>
+        ) : error ? (
+          <div className="text-center py-10 text-red-600">{error}</div>
+        ) : doctor ? (
+          <div className="mt-2">
+            <img
+              src={doctor.image || "/placeholder-doctor.png"}
+              className="w-24 h-24 rounded-full mx-auto mb-3"
+              alt={doctor.name}
+            />
+            <h2 className="text-xl font-bold mb-1 text-cyan-700">{doctor.name}</h2>
+            <p className="font-medium text-gray-700 mb-2">{doctor.specialization}</p>
+            <p className="text-sm text-gray-600 mb-2">{doctor.bio}</p>
+            <div className="my-2">
+              <p>Experience: {doctor.experience} years</p>
+              <p>Qualification: {doctor.qualification}</p>
+              <p>Email: {doctor.email}</p>
+              <p>Phone: {doctor.phone}</p>
+              <p>Consultation Fee: ₹{doctor.consultation_fee}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-10 text-gray-500">No doctor information available.</div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 const MyAppointments = () => {
@@ -48,6 +90,10 @@ const MyAppointments = () => {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [showDoctorModal, setShowDoctorModal] = useState(false);
+  const [doctorLoading, setDoctorLoading] = useState(false);
+  const [doctorError, setDoctorError] = useState("");
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -68,6 +114,26 @@ const MyAppointments = () => {
     };
     fetchAppointments();
   }, []);
+
+  // Fetch doctor info by backend API when clicked
+  const fetchDoctorDetail = async (doctorId) => {
+    try {
+      setDoctorLoading(true);
+      setDoctorError("");
+      setSelectedDoctor(null);
+      setShowDoctorModal(true);
+      const res = await API.get(`/doctors/${doctorId}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+      setSelectedDoctor(res.data);
+    } catch (err) {
+      setDoctorError("Error loading doctor details.");
+    } finally {
+      setDoctorLoading(false);
+    }
+  };
 
   const filteredAppointments = appointments.filter((apt) => {
     const doctor = apt.doctor_id?.name?.toLowerCase() || "";
@@ -171,7 +237,14 @@ const MyAppointments = () => {
                       <td className="py-2 sm:py-4 px-2 sm:px-6">{shortDate(apt.date)}</td>
                       <td className="py-2 sm:py-4 px-2 sm:px-6">{formatTimeToIST(apt.time)}</td>
                       <td className="py-2 sm:py-4 px-2 sm:px-6 font-semibold">
-                        <span className="text-cyan-600 hover:underline cursor-pointer">
+                        <span
+                          className="text-cyan-600 hover:underline cursor-pointer"
+                          onClick={() =>
+                            fetchDoctorDetail(
+                              apt.doctor_id?._id || apt.doctor_id
+                            )
+                          }
+                        >
                           {apt.doctor_id?.name || "Unknown"}
                         </span>
                       </td>
@@ -205,6 +278,18 @@ const MyAppointments = () => {
             </div>
           )}
         </div>
+        {showDoctorModal && (
+          <DoctorInfoModal
+            doctor={selectedDoctor}
+            loading={doctorLoading}
+            error={doctorError}
+            onClose={() => {
+              setShowDoctorModal(false);
+              setSelectedDoctor(null);
+              setDoctorError("");
+            }}
+          />
+        )}
       </div>
     </FadeInSection>
   );

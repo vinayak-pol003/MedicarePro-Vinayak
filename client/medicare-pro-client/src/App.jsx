@@ -23,6 +23,8 @@ import AddDoctor from "./pages/AddDoctors.jsx";
 import ChatWithGemini from "./pages/ChatWithGemini.jsx";
 import PublicRoute from "./contex/PublicRoute.jsx";
 import RoleProtectedRoute from "./contex/RoleProtectedRoute.jsx";
+import AddAdmin from "./pages/AddAdmin.jsx";
+
 
 
 export default function App() {
@@ -47,6 +49,7 @@ export default function App() {
           <Route path="/contactus" element={<ContactUs/>}/>
           <Route path="/aboutus" element={<AboutUs/>}/>
           <Route path="/add-doctor" element={<RoleProtectedRoute allowedRoles={['admin','doctor']}>  <AddDoctor/>  </RoleProtectedRoute>}/>
+          <Route path="/add-admin" element={<RoleProtectedRoute allowedRoles={['admin']}>  <AddAdmin/> </RoleProtectedRoute>}/>
           <Route path="/chat" element={<ChatWithGemini/>} />
         </Routes>
       </Router>

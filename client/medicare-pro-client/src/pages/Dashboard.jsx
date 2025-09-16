@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import API from "../utils/api";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade.jsx";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
@@ -10,6 +11,7 @@ export default function Dashboard() {
     totalPatients: 0,
     totalAppointments: 0,
     todaysAppointments: 0,
+    totalAdmins: 0, // Add totalAdmins to stats
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -20,6 +22,7 @@ export default function Dashboard() {
     patients: 100,
     appointments: 200,
     todaysAppointments: 40,
+    admins: 10, // Add max value for admins
   };
 
   useEffect(() => {
@@ -32,17 +35,25 @@ export default function Dashboard() {
       try {
         setLoading(true);
         setError("");
-        const [doctorsRes, patientsRes, appointmentsRes, todaysAppointmentsRes] = await Promise.all([
+        const [doctorsRes, patientsRes, appointmentsRes, todaysAppointmentsRes, usersRes] = await Promise.all([
           API.get("/doctors"),
           API.get("/patients"),
           API.get("/appointments"),
           API.get("/appointments/today"),
+          API.get("/users"), // Fetch all users to filter admins
         ]);
+
+        // Filter admin users from all users
+        const adminUsers = Array.isArray(usersRes.data) 
+          ? usersRes.data.filter(user => user.role === "admin") 
+          : [];
+
         setStats({
           totalDoctors: Array.isArray(doctorsRes.data) ? doctorsRes.data.length : 0,
           totalPatients: Array.isArray(patientsRes.data) ? patientsRes.data.length : 0,
           totalAppointments: Array.isArray(appointmentsRes.data) ? appointmentsRes.data.length : 0,
           todaysAppointments: Array.isArray(todaysAppointmentsRes.data) ? todaysAppointmentsRes.data.length : 0,
+          totalAdmins: adminUsers.length, // Count of admin users
         });
       } catch (err) {
         setError("Failed to load dashboard stats.");
@@ -73,21 +84,34 @@ export default function Dashboard() {
 
   return (
     <FadeInSection>
-      
       <div className="bg-[#f7fafc] w-full min-h-screen p-4 sm:p-8 mt-13">
+        <div className="bg-cyan-500 w-full p-4 sm:p-6 rounded-lg shadow-md mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-center">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1">Dashboard</h1>
+              <p className="text-gray-600 text-sm sm:text-base">
+                Overview of system metrics and management tools
+              </p>
+            </div>
 
-       <div className="bg-cyan-500 w-full p-4 sm:p-6 rounded-lg shadow-md mb-4 sm:mb-6">
-  <div className="flex flex-col sm:flex-row justify-between items-center">
-    <div>
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1">Dashboard</h1>
-      <p className="text-gray-600 text-sm sm:text-base">Overview of system metrics and management tools</p>
-    </div>
-  </div>
-</div>
+            {/* show button only for admins */}
+            {user?.role === "admin" && (
+              <button className="bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700">
+                <Link to="/add-admin">Add Admin</Link>
+              </button>
+            )}
+          </div>
+        </div>
 
-
-        {/* Top stat cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        {/* Top stat cards - Updated to include Admins */}
+        
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+           {/* New Admins Card */}
+          <div className="rounded-xl bg-[#f0f4ff] p-6 shadow flex flex-col items-start">
+            <span className="uppercase text-xs text-gray-500 font-semibold mb-1">Admins</span>
+            <span className="text-3xl font-bold text-gray-800">{stats.totalAdmins}</span>
+            <span className="text-green-500 font-medium text-xs mt-2">+0.5% ↗</span>
+          </div>
           <div className="rounded-xl bg-[#e6f3ff] p-6 shadow flex flex-col items-start">
             <span className="uppercase text-xs text-gray-500 font-semibold mb-1">Doctors</span>
             <span className="text-3xl font-bold text-gray-800">{stats.totalDoctors}</span>
@@ -98,6 +122,7 @@ export default function Dashboard() {
             <span className="text-3xl font-bold text-gray-800">{stats.totalPatients}</span>
             <span className="text-green-500 font-medium text-xs mt-2">2.5%</span>
           </div>
+         
           <div className="rounded-xl bg-[#edf5ff] p-6 shadow flex flex-col items-start">
             <span className="uppercase text-xs text-gray-500 font-semibold mb-1">Appointments</span>
             <span className="text-3xl font-bold text-gray-800">{stats.totalAppointments}</span>
@@ -109,7 +134,8 @@ export default function Dashboard() {
             <span className="text-green-500 font-medium text-xs mt-2">+0.2% ↗</span>
           </div>
         </div>
-        {/* Medicare Analytics Section */}
+
+        {/* Medicare Analytics Section - Updated to include Admins */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 w-full">
           {/* Total Beneficiaries Dynamic Bar Chart */}
           <div className="col-span-2 bg-white rounded-2xl shadow p-6 flex flex-col min-h-[250px]">
@@ -140,6 +166,17 @@ export default function Dashboard() {
                     style={{ width: `${Math.min((stats.totalPatients / MAX.patients) * 100, 100)}%` }}
                   ></div>
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-700 font-semibold">{stats.totalPatients}</span>
+                </div>
+              </div>
+              {/* Admins - New Bar */}
+              <div className="flex items-center">
+                <span className="w-28 text-sm text-gray-500">Admins</span>
+                <div className="flex-1 h-7 mx-2 relative rounded-full bg-purple-100 overflow-hidden">
+                  <div
+                    className="h-full bg-purple-500 rounded-full transition-all duration-700"
+                    style={{ width: `${Math.min((stats.totalAdmins / MAX.admins) * 100, 100)}%` }}
+                  ></div>
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-700 font-semibold">{stats.totalAdmins}</span>
                 </div>
               </div>
               {/* Appointments */}
@@ -186,3 +223,4 @@ export default function Dashboard() {
     </FadeInSection>
   );
 }
+

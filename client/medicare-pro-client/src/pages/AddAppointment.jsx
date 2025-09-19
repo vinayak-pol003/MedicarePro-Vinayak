@@ -26,10 +26,10 @@ export default function AddAppointment({ onAdded }) {
       try {
         const token = user?.token || localStorage.getItem("token") || "";
         const [patientsRes, doctorsRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/patients", {
+          axios.get("https://medicare-pro-bwiw.onrender.com/api/patients", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("http://localhost:5000/api/doctors"),
+          axios.get("https://medicare-pro-bwiw.onrender.com/api/doctors"),
         ]);
         setPatients(patientsRes.data);
         setDoctors(doctorsRes.data);
@@ -66,7 +66,7 @@ export default function AddAppointment({ onAdded }) {
 
     try {
       const token = user?.token || localStorage.getItem("token") || "";
-      await axios.post("http://localhost:5000/api/appointments", formData, {
+      await axios.post("https://medicare-pro-bwiw.onrender.com/api/appointments", formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSuccess("Appointment added successfully!");
@@ -100,7 +100,7 @@ export default function AddAppointment({ onAdded }) {
         }}
       >
         {/* Left Info Panel */}
-        <div className="w-full lg:w-1/2 px-4 sm:px-8 lg:px-16 text-black flex flex-col justify-center items-center lg:items-start mb-8 lg:mb-0 mt-18">
+        <div className="w-full lg:w-1/2 px-4 sm:px-8 lg:px-16 text-black flex flex-col justify-center items-center lg:items-start mb-8 lg:mb-0 lg:mt-0">
           <h1 className="text-3xl sm:text-5xl font-bold mb-4 text-center lg:text-left">
             Welcome to Medicare <span className="text-cyan-500">Pro</span>
           </h1>

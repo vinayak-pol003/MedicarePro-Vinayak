@@ -4,8 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade";
 
-// Patient Profile Expansion Component (keeping the same as before)
-function PatientProfileExpansion({ patient, onClose, onSave, loading, error }) {
+// Patient Profile Expansion Component with role-based edit access
+function PatientProfileExpansion({ patient, onClose, onSave, loading, error, userRole }) {
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -221,7 +221,7 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error }) {
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons - Only show edit functionality to admins */}
             <div className="flex justify-end mt-6 gap-3">
               {editMode ? (
                 <>
@@ -241,12 +241,15 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error }) {
                   </button>
                 </>
               ) : (
-                <button
-                  onClick={handleEdit}
-                  className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors text-sm"
-                >
-                  Edit Patient
-                </button>
+                // Only show edit button to admins
+                userRole === "admin" && (
+                  <button
+                    onClick={handleEdit}
+                    className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors text-sm"
+                  >
+                    Edit Patient
+                  </button>
+                )
               )}
             </div>
           </div>
@@ -277,7 +280,7 @@ export default function Patients() {
           navigate("/login");
           return;
         }
-        const res = await axios.get("http://localhost:5000/api/patients", {
+        const res = await axios.get("https://medicare-pro-bwiw.onrender.com/api/patients", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setPatients(Array.isArray(res.data) ? res.data : []);
@@ -306,7 +309,7 @@ export default function Patients() {
       setExpandedPatientId(patientId);
 
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:5000/api/patients/${patientId}`, {
+      const res = await axios.get(`https://medicare-pro-bwiw.onrender.com/api/patients/${patientId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSelectedPatient(res.data);
@@ -322,7 +325,7 @@ export default function Patients() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/patients/${patientId}`,
+        `https://medicare-pro-bwiw.onrender.com/api/patients/${patientId}`,
         updatedData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -364,6 +367,7 @@ export default function Patients() {
     const confirmMessage = `Are you sure you want to delete ${patientName}?\n\nThis will also delete all appointments associated with this patient.`;
     if (!window.confirm(confirmMessage)) return;
     
+    // Security check for doctors (though they shouldn't see delete button anyway)
     if (user?.role === "doctor") {
       const patientDoctorEmail = patient?.doctor_id?.email;
       
@@ -376,7 +380,7 @@ export default function Patients() {
     try {
       const token = localStorage.getItem("token");
       
-      const appointmentsRes = await axios.get("http://localhost:5000/api/appointments", {
+      const appointmentsRes = await axios.get("https://medicare-pro-bwiw.onrender.com/api/appointments", {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -385,14 +389,14 @@ export default function Patients() {
       );
       
       const deleteAppointmentPromises = patientAppointments.map(appointment =>
-        axios.delete(`http://localhost:5000/api/appointments/${appointment._id}`, {
+        axios.delete(`https://medicare-pro-bwiw.onrender.com/api/appointments/${appointment._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       );
       
       await Promise.all(deleteAppointmentPromises);
       
-      await axios.delete(`http://localhost:5000/api/patients/${id}`, {
+      await axios.delete(`https://medicare-pro-bwiw.onrender.com/api/patients/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -548,12 +552,15 @@ export default function Patients() {
                     >
                       {expandedPatientId === p._id ? 'Hide ▲' : 'View ▼'}
                     </button>
-                    <button
-                      onClick={() => handleDelete(p._id)}
-                      className="px-4 py-2 bg-red-50 text-red-600 text-sm rounded hover:bg-red-100 border border-red-200 transition-colors"
-                    >
-                      Delete
-                    </button>
+                    {/* Only show delete button to admins */}
+                    {user?.role === "admin" && (
+                      <button
+                        onClick={() => handleDelete(p._id)}
+                        className="px-4 py-2 bg-red-50 text-red-600 text-sm rounded hover:bg-red-100 border border-red-200 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -567,6 +574,7 @@ export default function Patients() {
                     error={patientError}
                     onClose={closePatientExpansion}
                     onSave={savePatientChanges}
+                    userRole={user?.role}
                   />
                 </div>
               )}

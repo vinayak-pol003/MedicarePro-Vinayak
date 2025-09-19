@@ -11,7 +11,7 @@ import FadeInSection from "../utils/Fade";
 export default function Landing() {
   return (
     <FadeInSection>
-      <div className="min-h-screen bg-gray-50 mt-8 sm:mt-16">
+      <div className="min-h-screen bg-gray-50 mt-12 sm:mt-16">
         {/* Hero Section */}
         <section className="flex flex-col items-center px-4 sm:px-6 md:px-20 py-8 sm:py-10 bg-cyan-600">
           <div className="w-full max-w-3xl sm:max-w-5xl flex flex-col md:flex-row items-center gap-6 sm:gap-10">

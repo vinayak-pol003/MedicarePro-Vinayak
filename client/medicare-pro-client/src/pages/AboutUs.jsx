@@ -15,7 +15,7 @@ const AboutUs = () => (
     <Navbar />
 
     <FadeInSection>
-      <main className="mt-8 sm:mt-16">
+      <main className="mt-7 sm:mt-16">
 
       {/* Who We Are Section */}
       <section className="relative w-full min-h-[450px] sm:min-h-[650px] flex items-start justify-center bg-transparent m-0">
@@ -25,17 +25,20 @@ const AboutUs = () => (
           alt=""
           className="absolute top-0 left-0 w-full h-full object-cover opacity-70 z-0"
         />
-        <div className="relative z-10 max-w-2xl sm:max-w-3xl w-full px-4 sm:px-6 py-7 sm:py-12 fade-in-up">
-          <h2 className="text-2xl sm:text-5xl font-extrabold text-cyan-500 mb-5 sm:mb-6 drop-shadow-lg text-center">
-            Who We Are
-          </h2>
-          <p className="text-base sm:text-lg text-gray-700 font-medium leading-relaxed text-center">
-            Medicare Pro was created with a simple purpose: to make healthcare insurance understandable, accessible, and supportive for everyone.<br /><br />
-            We believe that peace of mind should never be complicated or out of reach. Our expert team—spanning medicine, insurance, and technology—stands by each user like a caring guide. We break down every option, answer every question, and walk with you until the coverage you choose truly matches your life.<br /><br />
-            We strive to remove barriers and put your needs first, listening with empathy and acting with reliability. Our commitment goes beyond products—it’s about building lasting relationships and empowering your health journey with clear, honest advice.<br /><br />
-            Whether you are a family, business, or individual, we ensure you never feel alone in decision-making. Together, we imagine a healthier community—one where care, fairness, and simplicity are at the heart of every plan.
-          </p>
-        </div>
+        <div className="relative z-10 max-w-5xl sm:max-w-7xl w-full px-8 sm:px-10 py-12 sm:py-20 fade-in-up bg-white/75 mt-14">
+  <h2 className="text-2xl sm:text-5xl font-extrabold text-cyan-500 mb-5 sm:mb-6 drop-shadow-lg text-center">
+    Who We Are
+  </h2>
+  <p className="text-base sm:text-lg text-gray-700 font-medium leading-relaxed text-center">
+    Medicare Pro makes healthcare insurance simple and accessible for everyone.<br /><br />
+    Our expert team in medicine, insurance, and technology acts as your caring guide—breaking down options, answering questions, and helping you find coverage that truly fits your life.<br /><br />
+    We put your needs first with empathy and reliability, building lasting relationships through clear, honest advice.<br /><br />
+    Whether you're a family, business, or individual, you're never alone in your healthcare decisions. Together, we're creating a healthier community built on care, fairness, and simplicity.
+  </p>
+</div>
+
+
+
       </section>
 
       {/* Global Medical Care Section */}

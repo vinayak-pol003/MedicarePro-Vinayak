@@ -176,7 +176,7 @@ ${prescription.notes || ""}
 
   if (loading) {
     return (
-      <div className="p-10 text-center text-cyan-600">
+      <div className="p-10 text-center text-cyan-600 mt-17">
         <div className="animate-spin rounded-full h-8 sm:h-12 w-8 sm:w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
         Loading prescription...
       </div>

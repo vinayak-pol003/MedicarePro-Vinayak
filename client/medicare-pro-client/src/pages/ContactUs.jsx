@@ -26,7 +26,7 @@ const ContactUs = () => {
           className="min-h-screen bg-cover bg-center flex items-center justify-center pt-8 sm:pt-20 pb-8"
           style={{ backgroundImage: `url(${bgImage})` }}
         >
-          <div className="w-full max-w-3xl sm:max-w-5xl mx-auto bg-white bg-opacity-90 rounded-xl shadow-lg flex flex-col md:flex-row overflow-hidden">
+          <div className="w-full max-w-3xl sm:max-w-5xl mx-auto bg-white bg-opacity-90 rounded-xl shadow-lg flex flex-col md:flex-row overflow-hidden mt-10">
             {/* Left Panel */}
             <div className="w-full md:w-1/2 flex flex-col justify-center px-4 sm:px-8 py-6 sm:py-12">
               <h1 className="text-2xl sm:text-5xl font-bold mb-4 text-cyan-700 text-center md:text-left">Contact Us</h1>

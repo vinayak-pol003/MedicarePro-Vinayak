@@ -45,7 +45,7 @@ import axios from "axios";
 
 // Create a custom Axios instance
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://medicare-pro-bwiw.onrender.com/api",
 });
 
 // Request interceptor: Automatically attaches token from localStorage to every request

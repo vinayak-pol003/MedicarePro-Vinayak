@@ -62,7 +62,7 @@ export default function AddDoctor({ onAdded }) {
   try {
     if (imageFile) {
       // Fetch auth params and upload to ImageKit cloud
-      const res = await fetch("http://localhost:5000/api/imagekit-auth");
+      const res = await fetch("https://medicare-pro-bwiw.onrender.com/api/imagekit-auth");
       const authParams = await res.json();
 
       imageUrl = await new Promise((resolve, reject) => {
@@ -91,12 +91,12 @@ export default function AddDoctor({ onAdded }) {
     };
     delete doctorPayload.password; // don't send password to doctor profile
 
-    const doctorRes = await axios.post("http://localhost:5000/api/doctors", doctorPayload, {
+    const doctorRes = await axios.post("https://medicare-pro-bwiw.onrender.com/api/doctors", doctorPayload, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     // 2. Create user account for doctor login
-    await axios.post("http://localhost:5000/api/users", {
+    await axios.post("https://medicare-pro-bwiw.onrender.com/api/users", {
       name: formData.name,
       email: formData.email,
       password: formData.password,
@@ -138,7 +138,7 @@ export default function AddDoctor({ onAdded }) {
           backgroundPosition: "center",
         }}
       >
-        <div className="w-full lg:w-1/2 px-4 sm:px-8 lg:px-16 text-black flex flex-col justify-center items-center lg:items-start mb-8 lg:mb-0">
+        <div className="w-full lg:w-1/2 px-4 sm:px-8 lg:px-16 text-black flex flex-col justify-center items-center lg:items-start mb-8 lg:mb-0 mt-20">
           <h1 className="text-3xl sm:text-5xl font-bold mb-4 text-center lg:text-left">
             Add <span className="text-cyan-500">Doctor</span>
           </h1>

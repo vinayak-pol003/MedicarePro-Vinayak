@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import bgImage from '../assets/bg.png'
 import FadeInSection from "../utils/Fade";
+import toast from "react-hot-toast";
 
 export default function DoctorPrescription() {
   const { id } = useParams();

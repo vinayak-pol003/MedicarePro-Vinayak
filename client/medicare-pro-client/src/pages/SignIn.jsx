@@ -4,6 +4,7 @@ import { AuthContext } from "../contex/AuthContext.jsx";
 import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from "react-icons/fa";
 import bgImage from "../assets/bg.png";
 import FadeInSection from "../utils/Fade.jsx";
+import toast from 'react-hot-toast';
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -35,11 +36,11 @@ export default function SignIn() {
           navigate("/my-appointments");
         }
       } else {
-        alert(data.message || "Login failed");
+        toast.error(data.message || "Login failed");
       }
     } catch (err) {
       console.error(err);
-      alert("Something went wrong!");
+      toast.error("Something went wrong!");
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import API from "../utils/api";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade.jsx";
+import toast from "react-hot-toast";
 
 
 // Star rating rendering

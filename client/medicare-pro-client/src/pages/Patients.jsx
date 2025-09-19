@@ -3,6 +3,8 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade";
+import toast from "react-hot-toast";
+
 
 // Patient Profile Expansion Component with role-based edit access
 function PatientProfileExpansion({ patient, onClose, onSave, loading, error, userRole }) {
@@ -41,7 +43,7 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
       setEditMode(false);
     } catch (err) {
       console.error('Error saving patient:', err);
-      alert('Failed to save patient details');
+      toast.error('Failed to save patient details');
     } finally {
       setSaving(false);
     }
@@ -338,7 +340,7 @@ export default function Patients() {
 
       setSelectedPatient(prev => ({ ...prev, ...updatedData }));
       
-      alert("Patient updated successfully!");
+      toast.success("Patient updated successfully!");
     } catch (err) {
       console.error("Error updating patient:", err);
       throw new Error(err.response?.data?.message || "Failed to update patient");
@@ -372,7 +374,7 @@ export default function Patients() {
       const patientDoctorEmail = patient?.doctor_id?.email;
       
       if (patientDoctorEmail !== user.email) {
-        alert("You can only delete your own patients");
+        toast.error("You can only delete your own patients");
         return;
       }
     }
@@ -406,11 +408,11 @@ export default function Patients() {
         closePatientExpansion();
       }
       
-      alert(`Successfully deleted ${patientName} and ${patientAppointments.length} associated appointments.`);
+      toast.success(`Successfully deleted ${patientName} and ${patientAppointments.length} associated appointments.`);
       
     } catch (err) {
       console.error("Error deleting patient and appointments:", err);
-      alert(`Failed to delete patient. Error: ${err.response?.data?.message || err.message}`);
+      toast.error(`Failed to delete patient. Error: ${err.response?.data?.message || err.message}`);
     }
   };
 

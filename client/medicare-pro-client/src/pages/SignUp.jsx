@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from "react-icons/fa";
 import bgImage from '../assets/bg.png';
 import FadeInSection from "../utils/Fade";
+import toast from "react-hot-toast";
 
 export default function SignUp() {
   const location = useLocation();
@@ -26,14 +27,14 @@ export default function SignUp() {
       const data = await res.json();
 
       if (res.ok || res.status === 201) {
-        alert("Account created successfully!");
+        toast.success("Account created successfully!");
         navigate("/signin");
       } else {
-        alert(data.message || "Signup failed");
+        toast.error(data.message || "Signup failed");
       }
     } catch (err) {
       console.error(err);
-      alert("Something went wrong!");
+      toast.error("Something went wrong!");
     }
   };
 

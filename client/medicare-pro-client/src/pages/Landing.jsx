@@ -1,3 +1,6 @@
+import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../contex/AuthContext.jsx";
 import doctorImg from "../assets/doctor.png";
 import partnerMedical1 from "../assets/partner1.png";
 import partnerInsurance2 from "../assets/partner2.png";
@@ -9,6 +12,19 @@ import LandingTestimonials from "./QALanding";
 import FadeInSection from "../utils/Fade";
 
 export default function Landing() {
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const handleBookAppointment = () => {
+    if (!user) {
+      // User not signed in, navigate to signin page
+      navigate("/signin");
+    } else {
+      // User is signed in, show popup message
+      alert("To book an appointment, visit the nearby Medicare Pro center.\n\nOur centers are located across the city for your convenience. Contact us at +91 98765 43210 for the nearest location.");
+    }
+  };
+
   return (
     <FadeInSection>
       <div className="min-h-screen bg-gray-50 mt-12 sm:mt-16">
@@ -135,9 +151,17 @@ export default function Landing() {
             <p className="text-gray-700 mb-4 sm:mb-6 text-sm sm:text-base">
               Booking with us is simple and fast. Choose your doctor, pick a suitable time, and get the care you deserve.
             </p>
-            <button className="bg-cyan-600 text-white font-bold px-6 sm:px-8 py-2 sm:py-3 rounded-lg shadow hover:bg-cyan-700 transition text-base sm:text-lg">
+            <button 
+              onClick={handleBookAppointment}
+              className="bg-cyan-600 text-white font-bold px-6 sm:px-8 py-2 sm:py-3 rounded-lg shadow hover:bg-cyan-700 transition text-base sm:text-lg"
+            >
               Book Appointment
             </button>
+            {!user && (
+              <p className="text-xs text-gray-500 mt-2">
+                Please sign in to book an appointment
+              </p>
+            )}
           </div>
         </section>
 
@@ -153,7 +177,10 @@ export default function Landing() {
                   How do I book an appointment?
                 </div>
                 <div className="text-gray-600 text-xs sm:text-sm">
-                  Select “Book Appointment,” choose your doctor and time slot, then submit your details. You’ll receive confirmation instantly.
+                  {user ? 
+                    "Visit your nearest Medicare Pro center to book an appointment with our qualified medical professionals." :
+                    "Sign in to your account first, then visit your nearest Medicare Pro center to book an appointment with our qualified medical professionals."
+                  }
                 </div>
               </div>
               <div className="bg-gray-50 p-4 sm:p-6 rounded-lg shadow">
@@ -185,7 +212,7 @@ export default function Landing() {
                   Are telehealth consultations available?
                 </div>
                 <div className="text-gray-600 text-xs sm:text-sm">
-                  Yes, you can book online video or phone consultations with our doctors.
+                  Yes, you can book online video or phone consultations with our doctors at our centers.
                 </div>
               </div>
             </div>
@@ -210,31 +237,34 @@ export default function Landing() {
                     <span className="font-semibold text-cyan-700">Email:</span>
                     <span className="text-gray-800 ml-2">info@yourclinic.com</span>
                   </div>
-                  <div className="text-xs sm:text-base">
+                  <div className="mb-2 sm:mb-4 text-xs sm:text-base">
                     <span className="font-semibold text-cyan-700">Hours:</span>
                     <span className="text-gray-800 ml-2">Mon-Sat: 8:00AM – 8:00PM</span>
                   </div>
+                  <div className="text-xs sm:text-base">
+                    <span className="font-semibold text-cyan-700">Appointments:</span>
+                    <span className="text-gray-800 ml-2">Visit center for booking</span>
+                  </div>
                 </div>
                 {/* Location/Map */}
-               <div className="bg-white p-4 sm:p-6 rounded-lg shadow flex flex-col justify-center items-center">
-      <div className="font-semibold text-cyan-700 mb-2 text-xs sm:text-base">Visit Us:</div>
-      <div className="text-gray-800 mb-2 sm:mb-4 text-center text-xs sm:text-base">
-        New BEL Rd, M S Ramaiah Nagar, MSRIT Post, Bengaluru, Karnataka 560054, India
-      </div>
-      <div className="w-full h-24 sm:h-40 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden">
-        <iframe
-          title="Google Map"
-          width="100%"
-          height="100%"
-          className="rounded-lg"
-          frameBorder="0"
-          style={{ border: 0 }}
-          src="https://www.google.com/maps?q=New+BEL+Rd,+M+S+Ramaiah+Nagar,+MSRIT+Post,+Bengaluru,+Karnataka+560054,+India&output=embed"
-          allowFullScreen
-        ></iframe>
-      </div>
-</div>
-
+                <div className="bg-white p-4 sm:p-6 rounded-lg shadow flex flex-col justify-center items-center">
+                  <div className="font-semibold text-cyan-700 mb-2 text-xs sm:text-base">Visit Us:</div>
+                  <div className="text-gray-800 mb-2 sm:mb-4 text-center text-xs sm:text-base">
+                    New BEL Rd, M S Ramaiah Nagar, MSRIT Post, Bengaluru, Karnataka 560054, India
+                  </div>
+                  <div className="w-full h-24 sm:h-40 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden">
+                    <iframe
+                      title="Google Map"
+                      width="100%"
+                      height="100%"
+                      className="rounded-lg"
+                      frameBorder="0"
+                      style={{ border: 0 }}
+                      src="https://www.google.com/maps?q=New+BEL+Rd,+M+S+Ramaiah+Nagar,+MSRIT+Post,+Bengaluru,+Karnataka+560054,+India&output=embed"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                </div>
               </div>
             </div>
           </section>

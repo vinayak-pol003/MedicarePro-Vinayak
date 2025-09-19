@@ -4,6 +4,7 @@ import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube, FaTrash, FaUser } from 
 import bgImage from '../assets/bg.png';
 import FadeInSection from "../utils/Fade";
 import { AuthContext } from "../contex/AuthContext.jsx";
+import toast from 'react-hot-toast';
 
 export default function AddAdmin() {
   const location = useLocation();
@@ -71,7 +72,7 @@ export default function AddAdmin() {
   const handleDeleteAdmin = async (adminId, adminName, adminEmail) => {
     // Prevent super admin from deleting themselves
     if (adminEmail === "chand@gmail.com") {
-      alert("Cannot delete the super admin account!");
+      toast.error("Cannot delete the super admin account!");
       return;
     }
 
@@ -95,11 +96,11 @@ export default function AddAdmin() {
 
       // Update the local state by removing the deleted admin
       setAdmins(prev => prev.filter(admin => admin._id !== adminId));
-      alert(`Successfully deleted admin: ${adminName}`);
+      toast.success(`Successfully deleted admin: ${adminName}`);
       
     } catch (err) {
       console.error("Error deleting admin:", err);
-      alert(`Failed to delete admin. Error: ${err.message}`);
+      toast.error(`Failed to delete admin. Error: ${err.message}`);
     }
   };
 
@@ -116,7 +117,7 @@ export default function AddAdmin() {
       const data = await res.json();
 
       if (res.ok || res.status === 201) {
-        alert("Account created successfully!");
+        toast.success("Account created successfully!");
         // Clear form
         setName("");
         setEmail("");
@@ -126,11 +127,11 @@ export default function AddAdmin() {
           await fetchAdmins();
         }
       } else {
-        alert(data.message || "Signup failed");
+        toast.error(data.message || "Signup failed");
       }
     } catch (err) {
       console.error(err);
-      alert("Something went wrong!");
+      toast.error("Something went wrong!");
     }
   };
 

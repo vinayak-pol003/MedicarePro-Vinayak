@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import FadeInSection from "../utils/Fade";
+import toast from "react-hot-toast";
 
 export default function Doctors() {
   const navigate = useNavigate();
@@ -64,7 +65,7 @@ export default function Doctors() {
       console.error("Error deleting doctor:", err);
       setError("Failed to delete doctor");
       // You could show a toast notification here
-      alert("Failed to delete doctor. Please try again.");
+      toast.error("Failed to delete doctor. Please try again.");
     }
   };
 

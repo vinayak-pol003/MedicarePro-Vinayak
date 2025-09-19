@@ -4,6 +4,7 @@ import API from "../utils/api";
 import bgImage from '../assets/bg.png'
 import FadeInSection from "../utils/Fade";
 import jsPDF from "jspdf";
+import toast from "react-hot-toast";
 
 const MyPrescription = () => {
   const { id } = useParams();

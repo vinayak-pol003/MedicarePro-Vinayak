@@ -118,6 +118,9 @@ export default function Navbar() {
         </button>
       </div>
 
+
+
+
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="fixed inset-0 top-16 bg-white bg-opacity-95 flex flex-col items-center justify-start space-y-6 py-6 md:hidden z-50 shadow-lg">

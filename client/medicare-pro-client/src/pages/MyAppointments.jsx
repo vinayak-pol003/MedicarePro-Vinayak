@@ -142,25 +142,43 @@ const MyAppointments = () => {
   const [doctorLoading, setDoctorLoading] = useState(false);
   const [doctorError, setDoctorError] = useState("");
 
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      console.log("=== FETCHING APPOINTMENTS ===");
+      console.log("User token:", user.token ? "Present" : "Missing");
+      console.log("User role:", user.role);
+      console.log("User email:", user.email);
+
+      const res = await API.get("/appointments/my", {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      console.log("Appointments response:", res.data);
+      console.log(`Found ${res.data.length} appointments`);
+
+      setAppointments(res.data);
+    } catch (err) {
+      console.error("Error fetching appointments:", err);
+      console.error("Error response:", err.response?.data);
+      setError(`Failed to load your appointments: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const res = await API.get("/appointments/my", {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        });
-        setAppointments(res.data);
-      } catch (err) {
-        setError("Failed to load your appointments");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchAppointments();
   }, []);
+
+  // Manual refresh function
+  const handleRefresh = () => {
+    console.log("Manual refresh triggered");
+    fetchAppointments();
+  };
 
   // Fetch doctor info and toggle expanded row
   const fetchDoctorDetail = async (doctorId, appointmentId) => {
@@ -260,9 +278,21 @@ const MyAppointments = () => {
         </div>
 
         <div className="w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-          <h1 className="text-lg sm:text-2xl font-bold px-4 sm:px-8 pt-4 sm:pt-8 pb-2 sm:pb-4 text-cyan-500">
-            My Appointments
-          </h1>
+          <div className="flex justify-between items-center px-4 sm:px-8 pt-4 sm:pt-8 pb-2 sm:pb-4">
+            <h1 className="text-lg sm:text-2xl font-bold text-cyan-500">
+              My Appointments
+            </h1>
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="bg-cyan-600 text-white px-3 py-2 rounded-lg hover:bg-cyan-700 transition-colors disabled:bg-gray-400 flex items-center gap-2"
+            >
+              <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
           {loading ? (
             <div className="flex items-center justify-center h-48 sm:h-64">
               <div className="animate-spin rounded-full h-8 sm:h-12 w-8 sm:w-12 border-b-2 border-cyan-600"></div>

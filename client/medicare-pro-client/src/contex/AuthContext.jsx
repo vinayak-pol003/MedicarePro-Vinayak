@@ -34,6 +34,8 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+
+  //refresh user state on app load
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {

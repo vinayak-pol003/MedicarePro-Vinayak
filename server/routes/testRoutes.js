@@ -10,6 +10,7 @@ import Doctor from "../models/Doctor.js";
 import Patient from "../models/Patient.js";
 import Appointment from "../models/Appointment.js";
 import { authMiddleware, roleCheck } from "../middleware/auth.js";
+import { io } from "../index.js";
 
 dotenv.config();
 const router = express.Router();
@@ -423,19 +424,92 @@ router.get(
 router.post("/appointments", authMiddleware, roleCheck(["patient", "doctor", "admin"]), async (req, res) => {
   try {
     const { patient_id, doctor_id, date, time, status } = req.body;
+
+    // Enhanced validation with detailed logging
+    console.log("=== APPOINTMENT CREATION DEBUG ===");
+    console.log("Request body:", req.body);
+    console.log("User from token:", req.user);
+
     if (!patient_id || !doctor_id || !date || !time) {
-      return res.status(400).json({ message: "Missing required fields" });
+      console.log("Missing required fields:", { patient_id, doctor_id, date, time });
+      return res.status(400).json({ message: "Missing required fields: patient_id, doctor_id, date, time" });
     }
+
     // Ensure patient_id is an ObjectId
     if (!mongoose.Types.ObjectId.isValid(patient_id)) {
-      return res.status(400).json({ message: "Invalid patient id." });
+      console.log("Invalid patient_id format:", patient_id);
+      return res.status(400).json({ message: "Invalid patient id format." });
     }
+
+    // Validate doctor_id
+    if (!mongoose.Types.ObjectId.isValid(doctor_id)) {
+      console.log("Invalid doctor_id format:", doctor_id);
+      return res.status(400).json({ message: "Invalid doctor id format." });
+    }
+
+    // Check if patient exists
+    const patient = await Patient.findById(patient_id);
+    if (!patient) {
+      console.log("Patient not found:", patient_id);
+      return res.status(404).json({ message: "Patient not found" });
+    }
+
+    // Check if doctor exists
+    const doctor = await Doctor.findById(doctor_id);
+    if (!doctor) {
+      console.log("Doctor not found:", doctor_id);
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    // Validate date format
+    const appointmentDate = new Date(date);
+    if (isNaN(appointmentDate.getTime())) {
+      console.log("Invalid date format:", date);
+      return res.status(400).json({ message: "Invalid date format" });
+    }
+
+    // Validate time format (HH:MM or HH:MM:SS)
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
+    if (!timeRegex.test(time)) {
+      console.log("Invalid time format:", time);
+      return res.status(400).json({ message: "Invalid time format. Use HH:MM or HH:MM:SS" });
+    }
+
+    console.log("Creating appointment with data:", {
+      patient_id,
+      doctor_id,
+      date: appointmentDate,
+      time,
+      status: status || "scheduled"
+    });
+
     // Ensure prescription is always present in model
-    const newAppointment = new Appointment({ patient_id, doctor_id, date, time, status, prescription: null });
-    await newAppointment.save();
-    res.status(201).json(newAppointment);
+    const newAppointment = new Appointment({
+      patient_id,
+      doctor_id,
+      date: appointmentDate,
+      time,
+      status: status || "scheduled",
+      prescription: null
+    });
+
+    const savedAppointment = await newAppointment.save();
+    console.log("Appointment saved successfully:", savedAppointment._id);
+
+    // Populate the saved appointment for response
+    const populatedAppointment = await Appointment.findById(savedAppointment._id)
+      .populate("patient_id", "name email")
+      .populate("doctor_id", "name email specialization");
+
+    console.log("Emitting Socket.IO event: appointmentCreated");
+    io.emit('appointmentCreated', populatedAppointment); // Emit event with populated data
+
+    console.log("=== APPOINTMENT CREATION SUCCESS ===");
+    res.status(201).json(populatedAppointment);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("=== APPOINTMENT CREATION ERROR ===");
+    console.error("Error details:", err);
+    res.status(500).json({ error: err.message, details: err.stack });
   }
 });
 
@@ -444,6 +518,7 @@ router.put("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", 
   try {
     const updateFields = req.body;
     const updated = await Appointment.findByIdAndUpdate(req.params.id, updateFields, { new: true });
+    io.emit('appointmentUpdated', updated); // Emit event
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -453,7 +528,8 @@ router.put("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", 
 // Delete appointment
 router.delete("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", "admin"]), async (req, res) => {
   try {
-    await Appointment.findByIdAndDelete(req.params.id);
+    const deleted = await Appointment.findByIdAndDelete(req.params.id);
+    io.emit('appointmentDeleted', { id: req.params.id }); // Emit event
     res.json({ message: "Appointment deleted" });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -469,21 +545,84 @@ router.get(
   roleCheck(["patient"]),
   async (req, res) => {
     try {
+      console.log("=== PATIENT APPOINTMENTS DEBUG ===");
+      console.log("User from token:", req.user);
+
       // Find patient document with the user's email
       const patient = await Patient.findOne({ email: req.user.email });
+      console.log("Patient found:", patient ? patient._id : "No patient found");
+
       if (!patient) {
+        console.log("No patient profile found with email:", req.user.email);
+        console.log("Available patients in database:");
+        const allPatients = await Patient.find({}, 'name email');
+        console.log(allPatients.map(p => `${p.name}: ${p.email}`));
+
         // No patient profile found with this email
         return res.json([]);
       }
+
       // Find appointments for that patient, populate doctor AND prescription
       const appointments = await Appointment.find({ patient_id: patient._id })
         .populate("doctor_id", "name email specialization")
         .populate("prescription"); // <- ADDED: Always populate prescription!
+
+      console.log(`Found ${appointments.length} appointments for patient ${patient._id}`);
+      console.log("Appointments:", appointments.map(apt => ({
+        id: apt._id,
+        date: apt.date,
+        time: apt.time,
+        doctor: apt.doctor_id?.name,
+        status: apt.status
+      })));
+
+      console.log("=== PATIENT APPOINTMENTS SUCCESS ===");
       res.json(appointments);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      console.error("=== PATIENT APPOINTMENTS ERROR ===");
+      console.error("Error details:", err);
+      res.status(500).json({ error: err.message, details: err.stack });
     }
   }
 );
+
+// Test endpoint to debug appointments
+router.get("/appointments/debug", authMiddleware, async (req, res) => {
+  try {
+    console.log("=== APPOINTMENTS DEBUG ENDPOINT ===");
+
+    const appointments = await Appointment.find()
+      .populate("patient_id", "name email")
+      .populate("doctor_id", "name email specialization");
+
+    const patients = await Patient.find({}, 'name email');
+    const doctors = await Doctor.find({}, 'name email specialization');
+
+    console.log(`Total appointments: ${appointments.length}`);
+    console.log(`Total patients: ${patients.length}`);
+    console.log(`Total doctors: ${doctors.length}`);
+
+    const debugInfo = {
+      totalAppointments: appointments.length,
+      totalPatients: patients.length,
+      totalDoctors: doctors.length,
+      appointments: appointments.map(apt => ({
+        id: apt._id,
+        date: apt.date,
+        time: apt.time,
+        status: apt.status,
+        patient: apt.patient_id?.name || 'Unknown',
+        doctor: apt.doctor_id?.name || 'Unknown'
+      })),
+      patients: patients.map(p => ({ name: p.name, email: p.email })),
+      doctors: doctors.map(d => ({ name: d.name, email: d.email, specialization: d.specialization }))
+    };
+
+    res.json(debugInfo);
+  } catch (err) {
+    console.error("Debug endpoint error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;

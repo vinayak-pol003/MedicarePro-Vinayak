@@ -23,7 +23,6 @@ const RoleProtectedRoute = ({ children, allowedRoles, redirectPath = "/" }) => {
         return <Navigate to={redirectPath} replace />;
     }
   }
-
   // If user has correct role, render the component
   return children;
 };

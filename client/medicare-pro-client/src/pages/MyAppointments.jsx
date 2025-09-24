@@ -235,10 +235,10 @@ const MyAppointments = () => {
             <div className="flex flex-col sm:flex-row justify-between items-center">
               <div>
                 <h1 className="text-xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
-                  Appointments
+                 My Appointments
                 </h1>
                 <p className="text-gray-600 text-sm sm:text-base">
-                  Manage and track all appointments
+                  Track all your appointments
                 </p>
               </div>
             </div>

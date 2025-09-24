@@ -26,6 +26,7 @@ import PublicRoute from "./contex/PublicRoute.jsx";
 import RoleProtectedRoute from "./contex/RoleProtectedRoute.jsx";
 import AddAdmin from "./pages/AddAdmin.jsx";
 
+
 export default function App() {
   return (
     <AuthProvider>
@@ -111,7 +112,8 @@ export default function App() {
           <Route path="/aboutus" element={<AboutUs/>}/>
           <Route path="/add-doctor" element={<RoleProtectedRoute allowedRoles={['admin','doctor']}>  <AddDoctor/>  </RoleProtectedRoute>}/>
           <Route path="/add-admin" element={<RoleProtectedRoute allowedRoles={['admin']}>  <AddAdmin/> </RoleProtectedRoute>}/>
-          <Route path="/chat" element={<ChatWithGemini/>} />
+          <Route path="/chat" element={<ChatWithGemini/>}/>
+          <Route path="*" element={<h1 className="text-3xl font-bold text-center mt-20">404 - Page Not Found</h1>}/>
         </Routes>
       </Router>
     </AuthProvider>

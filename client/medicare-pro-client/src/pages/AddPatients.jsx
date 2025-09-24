@@ -4,9 +4,11 @@ import bgImage from "../assets/bg.png";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade.jsx";
 import imagekit from "../utils/imagekit.jsx"; // <-- Import your utility
+import { useNavigate } from "react-router-dom";
 
 export default function AddPatient({ onAdded }) {
   const { user } = useContext(AuthContext);
+  const navigator = useNavigate();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -124,6 +126,7 @@ const handleSubmit = async (e) => {
   } finally {
     setLoading(false);
   }
+  navigator(-1);  
 };
 
 

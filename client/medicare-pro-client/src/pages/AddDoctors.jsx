@@ -4,10 +4,14 @@ import bgImage from "../assets/bg.png";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade.jsx";
 import imagekit from "../utils/imagekit.jsx";
+import { useNavigate } from "react-router-dom";
+
 
 
 export default function AddDoctor({ onAdded }) {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+
 
   const [formData, setFormData] = useState({
     name: "",
@@ -80,6 +84,7 @@ export default function AddDoctor({ onAdded }) {
           } else resolve(result.url);
         });
       });
+
     }
 
     const token = user?.token || localStorage.getItem("token") || "";
@@ -125,6 +130,7 @@ export default function AddDoctor({ onAdded }) {
   } finally {
     setLoading(false);
   }
+  navigate(-1);
 };
 
 

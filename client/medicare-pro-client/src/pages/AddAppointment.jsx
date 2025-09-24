@@ -221,54 +221,58 @@ export default function AddAppointment({ onAdded }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setLoading(true);
+  e.preventDefault();
+  setError("");
+  setSuccess("");
+  setLoading(true);
 
-    try {
-      if (!formData.patient_id || !formData.doctor_id || !formData.date || !formData.time) {
-        throw new Error("All fields are required.");
-      }
-
-      const selectedDate = new Date(`${formData.date}T${formData.time}`);
-      const now = new Date();
-      if (selectedDate < now) {
-        throw new Error("Cannot schedule appointments in the past.");
-      }
-
-      const token = user?.token || localStorage.getItem("token") || "";
-
-      await axios.post("https://medicare-pro-bwiw.onrender.com/api/appointments", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setSuccess("Appointment added successfully!");
-
-      setFormData({
-        patient_id: patients.length > 0 ? patients[0]._id : "",
-        doctor_id: doctors.length > 0 ? doctors[0]._id : "",
-        date: "",
-        time: "",
-        status: "scheduled"
-      });
-
-      setTimeout(() => {
-        fetchAppointments();
-      }, 1000);
-
-      if (onAdded) onAdded();
-
-    } catch (err) {
-      const errorMessage = err.message ||
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        "Error adding appointment. Please try again.";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
+  try {
+    if (!formData.patient_id || !formData.doctor_id || !formData.date || !formData.time) {
+      throw new Error("All fields are required.");
     }
-  };
+
+    const selectedDate = new Date(`${formData.date}T${formData.time}`);
+    const now = new Date();
+    if (selectedDate < now) {
+      throw new Error("Cannot schedule appointments in the past.");
+    }
+
+    const token = user?.token || localStorage.getItem("token") || "";
+
+    await axios.post("https://medicare-pro-bwiw.onrender.com/api/appointments", formData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setSuccess("Appointment added successfully!");
+
+    setFormData({
+      patient_id: patients.length > 0 ? patients[0]._id : "",
+      doctor_id: doctors.length > 0 ? doctors[0]._id : "",
+      date: "",
+      time: "",
+      status: "scheduled"
+    });
+
+    setTimeout(() => {
+      fetchAppointments();
+    }, 1000);
+
+    if (onAdded) onAdded();
+
+    // Navigate to previous page
+    navigate(-1);
+
+  } catch (err) {
+    const errorMessage = err.message ||
+      err.response?.data?.message ||
+      err.response?.data?.error ||
+      "Error adding appointment. Please try again.";
+    setError(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleEventClick = (clickInfo) => {
     try {

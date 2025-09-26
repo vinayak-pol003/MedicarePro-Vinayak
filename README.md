@@ -181,7 +181,6 @@ Verify cloud profile images appear on dashboards and lists
 ✅ Doctor prescriptions
 ✅ Role-based dashboard
 ✅ ImageKit cloud image support
-🔲 Advanced features: Billing, Reports, Notifications
 
 👨‍💻 Author
 Built with ❤️ by Vinayak

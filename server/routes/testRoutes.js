@@ -513,6 +513,8 @@ router.post("/appointments", authMiddleware, roleCheck(["patient", "doctor", "ad
   }
 });
 
+
+
 // Update appointment
 router.put("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", "admin"]), async (req, res) => {
   try {

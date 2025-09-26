@@ -457,11 +457,13 @@ export default function Patients() {
                     : "Manage and track all patients"}
                 </p>
               </div>
-              <Link to="/addpatient" className="w-full sm:w-auto mt-2 sm:mt-0">
-                <button className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto">
-                  Add Patient
-                </button>
-              </Link>
+              {user?.role === "admin" && (
+        <Link to="/addpatient" className="w-full sm:w-auto mt-2 sm:mt-0">
+          <button className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto">
+            Add Patient
+          </button>
+        </Link>
+      )}
             </div>
           </div>
           {/* Filters */}

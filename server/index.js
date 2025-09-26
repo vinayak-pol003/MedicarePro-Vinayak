@@ -9,7 +9,7 @@ import { Server } from "socket.io";
 import testRoutes from "./routes/testRoutes.js";
 import doctorRoutes from "./routes/doctorRoutes.js";
 import prescriptionRoutes from "./routes/prescriptionRoutes.js";
-import path from "path";
+import contactRoutes from './routes/contactRoutes.js'
 import "./uploads.js"; // Ensure uploads directory exists
 import geminiChatRoute from './routes/geminiChatRoute.js';
 import ImageKit from "imagekit";
@@ -62,7 +62,9 @@ app.get("/", (req, res) => {
 
 // Use API routes under /api prefix
 app.use("/api", testRoutes);
+app.use("/api", contactRoutes);
 app.use("/api/doctors", doctorRoutes);
+
 app.use("/api/prescriptions", prescriptionRoutes);
 
 app.use(geminiChatRoute);

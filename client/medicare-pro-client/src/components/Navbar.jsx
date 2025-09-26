@@ -48,7 +48,7 @@ export default function Navbar() {
       {/* Desktop Links */}
       <div className="flex-1 flex justify-center">
         <div className="hidden md:flex space-x-6 items-center">
-          {(isPublicPage || (["patient", "doctor"].includes(user?.role) && isLoggedIn)) && (
+          {(isPublicPage || (["patient"].includes(user?.role) && isLoggedIn)) && (
             <>
               {publicLinks}
             </>

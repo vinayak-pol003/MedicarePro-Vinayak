@@ -528,37 +528,42 @@ const CustomTooltip = ({ active, payload, label }) => {
               </div>
 
               {/* Real-Time Weekly Appointments Bar Chart */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">📅 This Week's Appointments</h3>
-                  <div className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded">
-                    Live Data
-                  </div>
-                </div>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={chartData.weeklyAppointments}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#dcfce7" />
-                    <XAxis 
-                      dataKey="day" 
-                      stroke="#6b7280"
-                      fontSize={12}
-                    />
-                    <YAxis 
-                      stroke="#6b7280"
-                      fontSize={12}
-                    />
-                    <Tooltip content={<WeeklyTooltip />} />
-                    <Bar 
-                      dataKey="appointments" 
-                      fill="#059669"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-                <p className="text-xs text-gray-500 mt-2">
-                  📊 Real appointments for current week • Total: {chartData.weeklyAppointments.reduce((sum, day) => sum + day.appointments, 0)}
-                </p>
-              </div>
+              {/* Real-Time Weekly Appointments Bar Chart */}
+<div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6">
+  <div className="flex justify-between items-center mb-4">
+    <h3 className="text-lg font-semibold text-gray-800">📅 This Week's Appointments</h3>
+    <div className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded">
+      Live Data
+    </div>
+  </div>
+  <ResponsiveContainer width="100%" height={300}>
+    <BarChart data={chartData.weeklyAppointments}>
+      <CartesianGrid strokeDasharray="3 3" stroke="#dcfce7" />
+      <XAxis 
+        dataKey="day" 
+        stroke="#6b7280"
+        fontSize={12}
+      />
+      <YAxis 
+        stroke="#6b7280"
+        fontSize={12}
+        allowDecimals={false}
+        tickFormatter={(value) => Math.floor(value).toString()}
+        domain={[0, 'dataMax']}
+      />
+      <Tooltip content={<WeeklyTooltip />} />
+      <Bar 
+        dataKey="appointments" 
+        fill="#059669"
+        radius={[4, 4, 0, 0]}
+      />
+    </BarChart>
+  </ResponsiveContainer>
+  <p className="text-xs text-gray-500 mt-2">
+    📊 Real appointments for current week • Total: {chartData.weeklyAppointments.reduce((sum, day) => sum + day.appointments, 0)}
+  </p>
+</div>
+
 
               {/* Monthly Appointment Trends */}
               <div className="lg:col-span-2 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6">

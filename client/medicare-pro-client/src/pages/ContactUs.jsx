@@ -1,21 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
+import axios from "axios"; // Add this import
+import toast from "react-hot-toast"; // Add this import
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from "react-icons/fa";
 import bgImage from "../assets/bg.png";
 import FadeInSection from "../utils/Fade";
+import { AuthContext } from "../contex/AuthContext.jsx";
 
 const ContactUs = () => {
+  const { user } = useContext(AuthContext);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+
+  // Pre-fill form with user data when user is available
+  useEffect(() => {
+    if (user) {
+      setForm(prevForm => ({
+        ...prevForm,
+        name: user.name || "",
+        email: user.email || ""
+      }));
+    }
+  }, [user]);
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    
+    try {
+      const response = await axios.post('https://medicare-pro-bwiw.onrender.com/api/contact', {
+        name: form.name,
+        email: form.email,
+        message: form.message
+      });
+      
+      setSubmitted(true);
+      toast.success('Message sent successfully! We\'ll get back to you soon.');
+      
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setForm({ name: "", email: "", message: "" });
+        setSubmitted(false);
+        
+        // If user is logged in, refill their data
+        if (user) {
+          setForm(prevForm => ({
+            ...prevForm,
+            name: user.name || "",
+            email: user.email || ""
+          }));
+        }
+      }, 3000);
+      
+    } catch (error) {
+      toast.error('Failed to send message. Please try again.');
+      console.error('Error submitting form:', error);
+    }
   };
 
   return (
@@ -31,7 +75,7 @@ const ContactUs = () => {
             <div className="w-full md:w-1/2 flex flex-col justify-center px-4 sm:px-8 py-6 sm:py-12">
               <h1 className="text-2xl sm:text-5xl font-bold mb-4 text-cyan-700 text-center md:text-left">Contact Us</h1>
               <p className="mb-6 text-gray-700 text-sm sm:text-base text-center md:text-left">
-                Reach out for support, questions, or partnership inquiries. Our team is committed to helping you with anything you need regarding Medicare Pro services and healthcare solutions. Fill out the form and we’ll get back to you as soon as possible.
+                Reach out for support, questions, or partnership inquiries. Our team is committed to helping you with anything you need regarding Medicare Pro services and healthcare solutions. Fill out the form and we'll get back to you as soon as possible.
               </p>
               <div className="flex justify-center md:justify-start space-x-4 mt-2">
                 <a href="#"><FaFacebookF size={24} className="text-cyan-600 hover:text-cyan-800 transition" /></a>
@@ -40,6 +84,7 @@ const ContactUs = () => {
                 <a href="#"><FaYoutube size={24} className="text-cyan-600 hover:text-cyan-800 transition" /></a>
               </div>
             </div>
+            
             {/* Contact Section */}
             <section className="w-full md:w-1/2 px-4 sm:px-8 py-6 sm:py-12">
               <h2 className="text-xl sm:text-3xl font-bold text-center text-cyan-600 mb-4">
@@ -64,6 +109,7 @@ const ContactUs = () => {
                     <p className="text-gray-600 text-sm sm:text-base">+91 98765-43210</p>
                   </div>
                 </div>
+                
                 {/* Contact Form */}
                 <form className="md:w-1/2 flex flex-col gap-4" onSubmit={handleSubmit}>
                   <label className="font-medium text-gray-700 text-sm sm:text-base">
@@ -73,8 +119,11 @@ const ContactUs = () => {
                       name="name"
                       value={form.name}
                       onChange={handleChange}
+                      disabled={!!user} // Disable if user is logged in
                       required
-                      className="w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-200 text-sm sm:text-base"
+                      className={`w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-200 text-sm sm:text-base ${
+                        user ? 'bg-gray-100 cursor-not-allowed' : ''
+                      }`}
                     />
                   </label>
                   <label className="font-medium text-gray-700 text-sm sm:text-base">
@@ -84,8 +133,11 @@ const ContactUs = () => {
                       name="email"
                       value={form.email}
                       onChange={handleChange}
+                      disabled={!!user} // Disable if user is logged in
                       required
-                      className="w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-200 text-sm sm:text-base"
+                      className={`w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-200 text-sm sm:text-base ${
+                        user ? 'bg-gray-100 cursor-not-allowed' : ''
+                      }`}
                     />
                   </label>
                   <label className="font-medium text-gray-700 text-sm sm:text-base">
@@ -95,13 +147,14 @@ const ContactUs = () => {
                       rows="4"
                       value={form.message}
                       onChange={handleChange}
+                      placeholder="Please describe your inquiry in detail..."
                       required
                       className="w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-200 text-sm sm:text-base"
                     />
                   </label>
                   <button
                     type="submit"
-                    className="bg-cyan-600 text-white py-2 px-4 sm:px-6 rounded font-semibold hover:bg-cyan-700 transition text-sm sm:text-base"
+                    className="bg-cyan-600 text-white py-2 px-4 sm:px-6 rounded font-semibold hover:bg-cyan-700 transition text-sm sm:text-base disabled:bg-gray-400 disabled:cursor-not-allowed"
                     disabled={submitted}
                   >
                     {submitted ? "Thank You!" : "Send Message"}
@@ -111,7 +164,6 @@ const ContactUs = () => {
             </section>
           </div>
         </main>
-
       </FadeInSection>
       <Footer />
     </>

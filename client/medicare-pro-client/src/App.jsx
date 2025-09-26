@@ -25,6 +25,7 @@ import ChatWithGemini from "./pages/ChatWithGemini.jsx";
 import PublicRoute from "./contex/PublicRoute.jsx";
 import RoleProtectedRoute from "./contex/RoleProtectedRoute.jsx";
 import AddAdmin from "./pages/AddAdmin.jsx";
+import AdminContact from './components/AdminContact.jsx';
 
 
 export default function App() {
@@ -113,6 +114,7 @@ export default function App() {
           <Route path="/add-doctor" element={<RoleProtectedRoute allowedRoles={['admin','doctor']}>  <AddDoctor/>  </RoleProtectedRoute>}/>
           <Route path="/add-admin" element={<RoleProtectedRoute allowedRoles={['admin']}>  <AddAdmin/> </RoleProtectedRoute>}/>
           <Route path="/chat" element={<ChatWithGemini/>}/>
+          <Route path="/admin/contacts" element={<AdminContact />} />
           <Route path="*" element={<h1 className="text-3xl font-bold text-center mt-20">404 - Page Not Found</h1>}/>
         </Routes>
       </Router>

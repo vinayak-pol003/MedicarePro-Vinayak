@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import mongoose from "mongoose";
 import Doctor from "../models/Doctor.js";
+import { authMiddleware, roleCheck } from "../middleware/auth.js"; // Add this import
 
 const router = express.Router();
 
@@ -47,6 +48,29 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ADD THIS NEW ENDPOINT - Get current doctor's profile (for dashboard)
+router.get("/me", authMiddleware, roleCheck(["doctor"]), async (req, res) => {
+  try {
+    console.log("=== GET DOCTOR PROFILE ===");
+    console.log("User from token:", req.user);
+    
+    const doctor = await Doctor.findOne({ email: req.user.email }).select("-__v");
+    
+    if (!doctor) {
+      console.log("Doctor profile not found for email:", req.user.email);
+      return res.status(404).json({ 
+        message: "Doctor profile not found. Please contact admin to create your doctor profile." 
+      });
+    }
+
+    console.log("Doctor profile found:", doctor.name, doctor.specialization);
+    res.json(doctor);
+  } catch (err) {
+    console.error("Error fetching doctor profile:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get("/appointment-counts", async (req, res) => {
   try {
     // Fetch all doctors
@@ -82,53 +106,6 @@ router.get("/:id", async (req, res) => {
 });
 
 // Create doctor
-// router.post("/", upload.single("image"), async (req, res) => {
-//   try {
-//     const {
-//       name,
-//       email,
-//       phone,
-//       specialization,
-//       experience,
-//       qualification,
-//       bio,
-//       consultation_fee,
-//     } = req.body;
-
-//     if (!name || !email || !specialization) {
-//       return res.status(400).json({
-//         message: "Name, email, and specialization are required",
-//       });
-//     }
-
-//     // Check if email already exists
-//     const existingEmail = await Doctor.findOne({ email });
-//     if (existingEmail) {
-//       return res.status(400).json({ message: "Email already exists" });
-//     }
-
-//     const image = req.file ? `/uploads/${req.file.filename}` : undefined;
-
-//     const newDoctor = new Doctor({
-//       name,
-//       email,
-//       phone,
-//       specialization,
-//       experience: experience || 0,
-//       qualification,
-//       bio,
-//       consultation_fee: consultation_fee || 0,
-//       image,
-//     });
-
-//     await newDoctor.save();
-//     res.status(201).json(newDoctor);
-//   } catch (err) {
-//     console.error("Error creating doctor:", err);
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-
 router.post("/", async (req, res) => {
   try {
     const {
@@ -176,7 +153,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-
 // Update doctor
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
@@ -203,6 +179,62 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     res.json(updatedDoctor);
   } catch (err) {
     console.error("Error updating doctor:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ADD THIS NEW ENDPOINT - Update current doctor's own profile
+router.put("/me/profile", authMiddleware, roleCheck(["doctor"]), async (req, res) => {
+  try {
+    console.log("=== UPDATE DOCTOR PROFILE ===");
+    console.log("User from token:", req.user);
+    console.log("Update data:", req.body);
+
+    const {
+      name,
+      phone,
+      specialization,
+      experience,
+      qualification,
+      bio,
+      consultation_fee,
+      image
+    } = req.body;
+
+    // Find doctor by email
+    const doctor = await Doctor.findOne({ email: req.user.email });
+    
+    if (!doctor) {
+      return res.status(404).json({ 
+        message: "Doctor profile not found" 
+      });
+    }
+
+    // Build update object
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (phone) updateData.phone = phone;
+    if (specialization) updateData.specialization = specialization;
+    if (experience !== undefined) updateData.experience = experience;
+    if (qualification) updateData.qualification = qualification;
+    if (bio) updateData.bio = bio;
+    if (consultation_fee !== undefined) updateData.consultation_fee = consultation_fee;
+    if (image) updateData.image = image;
+
+    // Update doctor profile
+    const updatedDoctor = await Doctor.findByIdAndUpdate(
+      doctor._id,
+      updateData,
+      { new: true, runValidators: true }
+    ).select("-__v");
+
+    console.log("Doctor profile updated successfully");
+    res.json({
+      message: "Profile updated successfully",
+      doctor: updatedDoctor
+    });
+  } catch (err) {
+    console.error("Error updating doctor profile:", err);
     res.status(500).json({ error: err.message });
   }
 });

@@ -5,24 +5,91 @@ import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade.jsx";
 import toast from "react-hot-toast";
 
+// Interactive Star rating component
+const RatingStars = ({ rating = 0, appointmentId, onRatingUpdate, disabled = false }) => {
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const { user } = useContext(AuthContext);
 
-// Star rating rendering
-const RatingStars = ({ rating = 0 }) => (
-  <span>
-    {[1, 2, 3, 4, 5].map((i) => (
-      <span
-        key={i}
-        style={{
-          color: i <= rating ? "#facc15" : "#d1c9e6",
-          fontSize: "1.15em",
-          marginRight: "1px",
-        }}
-      >
-        ★
-      </span>
-    ))}
-  </span>
-);
+  const handleStarClick = async (selectedRating) => {
+    if (disabled || isUpdating) return;
+    
+    try {
+      setIsUpdating(true);
+      
+      // Make API call to update rating
+      const response = await API.patch(`/appointments/${appointmentId}/rating`, 
+        { rating: selectedRating },
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+
+      if (response.data) {
+        // Call parent component to update the appointment list
+        onRatingUpdate(appointmentId, selectedRating);
+        toast.success(`Rating updated to ${selectedRating} star${selectedRating !== 1 ? 's' : ''}!`);
+      }
+    } catch (error) {
+      console.error('Error updating rating:', error);
+      toast.error(`Failed to update rating: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleStarHover = (hoverRating) => {
+    if (!disabled && !isUpdating) {
+      setHoveredRating(hoverRating);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredRating(0);
+  };
+
+  const displayRating = hoveredRating || rating;
+
+  return (
+    <div className="flex items-center gap-1">
+      <div className="flex" onMouseLeave={handleMouseLeave}>
+        {[1, 2, 3, 4, 5].map((starValue) => (
+          <span
+            key={starValue}
+            className={`text-xl cursor-pointer transition-all duration-200 ${
+              disabled || isUpdating ? 'cursor-not-allowed opacity-50' : 'hover:scale-110'
+            }`}
+            style={{
+              color: starValue <= displayRating ? "#facc15" : "#d1c9e6",
+              fontSize: "1.15em",
+              marginRight: "1px",
+            }}
+            onClick={() => handleStarClick(starValue)}
+            onMouseEnter={() => handleStarHover(starValue)}
+            title={disabled ? 'Rating not available' : `Rate ${starValue} star${starValue !== 1 ? 's' : ''}`}
+          >
+            ★
+          </span>
+        ))}
+      </div>
+      
+      {isUpdating && (
+        <div className="ml-2 text-xs text-gray-500 flex items-center">
+          <div className="animate-spin rounded-full h-3 w-3 border-1 border-gray-300 border-t-cyan-600 mr-1"></div>
+          Updating...
+        </div>
+      )}
+      
+      {rating > 0 && !isUpdating && (
+        <span className="ml-1 text-xs text-gray-500">
+          ({rating}/5)
+        </span>
+      )}
+    </div>
+  );
+};
 
 function formatTimeToIST(timeStr) {
   if (!timeStr) return "";
@@ -178,6 +245,17 @@ const MyAppointments = () => {
   const handleRefresh = () => {
     console.log("Manual refresh triggered");
     fetchAppointments();
+  };
+
+  // Handle rating updates
+  const handleRatingUpdate = (appointmentId, newRating) => {
+    setAppointments(prevAppointments =>
+      prevAppointments.map(apt =>
+        apt._id === appointmentId 
+          ? { ...apt, rating: newRating }
+          : apt
+      )
+    );
   };
 
   // Fetch doctor info and toggle expanded row
@@ -350,7 +428,12 @@ const MyAppointments = () => {
                         </td>
                         <td className="py-2 sm:py-4 px-2 sm:px-6 capitalize">{apt.status}</td>
                         <td className="py-2 sm:py-4 px-2 sm:px-6">
-                          <RatingStars rating={apt.rating || 0} />
+                          <RatingStars 
+                            rating={apt.rating || 0} 
+                            appointmentId={apt._id}
+                            onRatingUpdate={handleRatingUpdate}
+                            disabled={apt.status === 'cancelled'} // Disable rating for cancelled appointments
+                          />
                         </td>
                         <td className="py-2 sm:py-4 px-2 sm:px-6">
                           {apt.prescription &&

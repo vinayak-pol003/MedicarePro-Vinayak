@@ -401,7 +401,7 @@ const handleDownloadPDF = () => {
           backgroundPosition: "center",
         }}
       >
-        <div className="w-full lg:w-1/2 px-4 sm:px-8 lg:px-16 text-black flex flex-col justify-center items-center lg:items-start mb-8 mt-18 lg:mb-0">
+        <div className="w-full lg:w-1/2 px-4 sm:px-8 lg:px-16 text-black flex flex-col justify-center items-center lg:items-start mb-8  lg:mb-0">
           <h1 className="text-2xl sm:text-4xl font-bold mb-4 text-cyan-600 text-center lg:text-left">
             Thank You for Choosing <span className="text-gray-800">Medicare Pro</span>
           </h1>

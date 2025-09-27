@@ -66,7 +66,7 @@ export default function Navbar() {
 
           {user?.role === "doctor" && (
             <>
-              <Link to="/dashboard" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+              <Link to="/doctors-dashboard" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Dashboard</Link>
               <Link to="/patients" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Patients</Link>
               <Link to="/appointments" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Appointments</Link>
               <Link to="/profile" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Profile</Link>

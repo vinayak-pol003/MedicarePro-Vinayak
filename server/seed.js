@@ -20,7 +20,8 @@ const seedData = async () => {
     const usersPlain = [
       { name: "Admin User", email: "admin@medicare.com", password: "admin123", role: "admin" },
       { name: "Dr. Smith", email: "doctor@medicare.com", password: "doc123", role: "doctor" },
-      { name: "Receptionist", email: "reception@medicare.com", password: "rec123", role: "receptionist" }
+      { name: "Chand", email: "chand@gmail.com", password: "1230", role: "admin" },
+      { name: "John Doe", email: "john@example.com", password: "patient123", role: "patient" }
     ];
 
     // Hash passwords before inserting users

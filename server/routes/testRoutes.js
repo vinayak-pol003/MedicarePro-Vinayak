@@ -11,6 +11,8 @@ import Patient from "../models/Patient.js";
 import Appointment from "../models/Appointment.js";
 import { authMiddleware, roleCheck } from "../middleware/auth.js";
 import { io } from "../index.js";
+import Prescription from "../models/Prescription.js";
+
 
 dotenv.config();
 const router = express.Router();
@@ -605,7 +607,7 @@ router.put("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", 
   }
 });
 
-// Delete appointment
+// Delete appointment (soft delete)
 router.delete("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", "admin"]), async (req, res) => {
   try {
     const deleted = await Appointment.findByIdAndDelete(req.params.id);
@@ -615,6 +617,83 @@ router.delete("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor
     res.status(500).json({ error: err.message });
   }
 });
+
+// routes/appointments.js
+// REPLACE your existing rating route with this corrected version:
+router.patch('/appointments/:id/rating', authMiddleware, async (req, res) => {
+  try {
+    console.log("=== RATING UPDATE DEBUG ===");
+    console.log("Appointment ID:", req.params.id);
+    console.log("Rating:", req.body.rating);
+    console.log("User from token:", req.user);
+
+    const { id } = req.params;
+    const { rating } = req.body;
+    
+    // Validate rating
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rating must be between 1 and 5'
+      });
+    }
+
+    // CRITICAL FIX: Find the patient first using user's email
+    const patient = await Patient.findOne({ email: req.user.email });
+    if (!patient) {
+      console.log("No patient found with email:", req.user.email);
+      return res.status(404).json({
+        success: false,
+        message: 'Patient profile not found'
+      });
+    }
+
+    console.log("Patient found:", patient._id);
+
+    // Find appointment using patient._id (not req.user.id)
+    const appointment = await Appointment.findOne({
+      _id: id,
+      patient_id: patient._id  // <-- This is the key fix!
+    });
+
+    if (!appointment) {
+      console.log("Appointment not found for patient:", patient._id, "appointment:", id);
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found or you do not have permission to rate this appointment'
+      });
+    }
+
+    console.log("Appointment found:", appointment._id);
+
+    // Update the rating
+    appointment.rating = parseInt(rating);
+    await appointment.save();
+
+    console.log("Rating updated successfully to:", appointment.rating);
+
+    res.json({
+      success: true,
+      message: 'Rating updated successfully',
+      data: {
+        _id: appointment._id,
+        rating: appointment.rating
+      }
+    });
+
+    console.log("=== RATING UPDATE SUCCESS ===");
+  } catch (error) {
+    console.error('=== RATING UPDATE ERROR ===');
+    console.error('Error updating appointment rating:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update rating',
+      error: error.message
+    });
+  }
+});
+
+
 
 // ------------------- PATIENT-SPECIFIC ROUTES -------------------
 

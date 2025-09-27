@@ -130,6 +130,84 @@ router.get("/patients", authMiddleware, roleCheck(["admin", "doctor"]), async (r
   }
 });
 
+// PUT route for updating profile - add this after your GET /profile route
+router.put("/profile", authMiddleware, async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    const userId = req.user.id;
+    
+    // Build update object with only provided fields
+    const updateData = {};
+    
+    if (name && name.trim() !== "") {
+      updateData.name = name.trim();
+    }
+    
+    if (email && email.trim() !== "") {
+      // Check if email is already taken by another user
+      const existingUser = await User.findOne({ 
+        email: email.trim(), 
+        _id: { $ne: userId } 
+      });
+      if (existingUser) {
+        return res.status(400).json({ message: "Email is already in use by another account" });
+      }
+      updateData.email = email.trim();
+    }
+    
+    if (password && password.trim() !== "") {
+      // Hash the new password
+      const saltRounds = 10;
+      updateData.password = await bcrypt.hash(password.trim(), saltRounds);
+    }
+
+    // Check if there's anything to update
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: "No valid fields to update" });
+    }
+
+    // Update user in database
+    const updatedUser = await User.findByIdAndUpdate(
+      userId, 
+      updateData, 
+      { 
+        new: true, // Return the updated document
+        select: '-password', // Exclude password from response
+        runValidators: true // Run mongoose validation
+      }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      message: "Profile updated successfully",
+      ...updatedUser.toObject()
+    });
+
+  } catch (error) {
+    console.error('Profile update error:', error);
+    
+    // Handle mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ message: errors.join(', ') });
+    }
+    
+    // Handle duplicate key errors (if email is unique in schema)
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Email is already in use" });
+    }
+    
+    res.status(500).json({ 
+      message: 'Server error while updating profile',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+
 
 // Create patient (doctor and admin allowed)
 // router.post(

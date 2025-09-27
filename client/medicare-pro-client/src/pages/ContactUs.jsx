@@ -67,7 +67,7 @@ const ContactUs = () => {
       <Navbar />
       <FadeInSection>
         <main
-          className="min-h-screen bg-cover bg-center flex items-center justify-center pt-8 sm:pt-20 pb-8"
+          className="min-h-screen bg-cover bg-center flex items-center justify-center pt-8 sm:pt-20 pb-8 "
           style={{ backgroundImage: `url(${bgImage})` }}
         >
           <div className="w-full max-w-3xl sm:max-w-5xl mx-auto bg-white bg-opacity-90 rounded-xl shadow-lg flex flex-col md:flex-row overflow-hidden mt-10">

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const faqs = [
   "How can I export my data?",
@@ -37,9 +38,11 @@ const SupportFAQsCard = () => {
           ))}
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
-          <button className="border border-cyan-500 text-cyan-700 font-medium py-2 px-4 w-full sm:w-auto rounded transition hover:bg-violet-50" type="button">
+          <Link to="/contactus" className="w-full sm:w-auto">
+            <button className="border border-cyan-500 text-cyan-700 font-medium py-2 px-4 w-full sm:w-auto rounded transition hover:bg-violet-50" type="button">
             Contact Support
-          </button>
+            </button>
+          </Link>
           <button
             className="bg-cyan-600 text-white font-medium py-2 px-4 w-full sm:w-auto rounded"
             type="button"

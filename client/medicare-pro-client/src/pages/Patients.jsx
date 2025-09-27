@@ -7,23 +7,24 @@ import toast from "react-hot-toast";
 
 
 // Patient Profile Expansion Component with role-based edit access
+// Patient Profile Expansion Component with role-based edit access
 function PatientProfileExpansion({ patient, onClose, onSave, loading, error, userRole }) {
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     phone: '',
     description: ''
+    // Removed email from formData since it's no longer editable
   });
 
   useEffect(() => {
     if (patient) {
       setFormData({
         name: patient.name || '',
-        email: patient.email || '',
         phone: patient.phone || '',
         description: patient.description || ''
+        // Removed email from formData
       });
     }
   }, [patient]);
@@ -52,9 +53,9 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
   const handleCancel = () => {
     setFormData({
       name: patient?.name || '',
-      email: patient?.email || '',
       phone: patient?.phone || '',
       description: patient?.description || ''
+      // Removed email from formData
     });
     setEditMode(false);
   };
@@ -62,9 +63,9 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
   const handleEdit = () => {
     setFormData({
       name: patient?.name || '',
-      email: patient?.email || '',
       phone: patient?.phone || '',
       description: patient?.description || ''
+      // Removed email from formData
     });
     setEditMode(true);
   };
@@ -154,22 +155,15 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
                 )}
               </div>
 
-              {/* Email Field */}
+              {/* Email Field - Always Read-only */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                {editMode ? (
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
-                  />
-                ) : (
-                  <p className="text-gray-800 bg-gray-50 px-3 py-2 rounded-lg text-sm">
-                    {patient?.email || 'Not provided'}
-                  </p>
-                )}
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                  <span className="text-xs text-gray-500 ml-1">(read-only)</span>
+                </label>
+                <p className="text-gray-800 bg-gray-100 px-3 py-2 rounded-lg text-sm border border-gray-200">
+                  {patient?.email || 'Not provided'}
+                </p>
               </div>
 
               {/* Phone Field */}
@@ -260,6 +254,7 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
     </div>
   );
 }
+
 
 export default function Patients() {
   const { user } = useContext(AuthContext);

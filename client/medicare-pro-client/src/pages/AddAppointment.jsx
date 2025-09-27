@@ -49,7 +49,7 @@ export default function AddAppointment({ onAdded }) {
   const fetchAppointments = useCallback(async () => {
     try {
       const token = user?.token || localStorage.getItem("token") || "";
-      const appointmentsRes = await axios.get("https://medicare-pro-bwiw.onrender.com/api/appointments", {
+      const appointmentsRes = await axios.get("http://localhost:5000/api/appointments", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -127,10 +127,10 @@ export default function AddAppointment({ onAdded }) {
         const token = user?.token || localStorage.getItem("token") || "";
 
         const [patientsRes, doctorsRes] = await Promise.all([
-          axios.get("https://medicare-pro-bwiw.onrender.com/api/patients", {
+          axios.get("http://localhost:5000/api/patients", {
             headers: { Authorization: `Bearer ${token}` },
           }).catch(() => ({ data: [] })),
-          axios.get("https://medicare-pro-bwiw.onrender.com/api/doctors").catch(() => ({ data: [] }))
+          axios.get("http://localhost:5000/api/doctors").catch(() => ({ data: [] }))
         ]);
 
         setPatients(patientsRes.data || []);
@@ -239,7 +239,7 @@ export default function AddAppointment({ onAdded }) {
 
     const token = user?.token || localStorage.getItem("token") || "";
 
-    await axios.post("https://medicare-pro-bwiw.onrender.com/api/appointments", formData, {
+    await axios.post("http://localhost:5000/api/appointments", formData, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

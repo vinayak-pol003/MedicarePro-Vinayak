@@ -32,7 +32,7 @@ const ContactUs = () => {
     e.preventDefault();
     
     try {
-      const response = await axios.post('https://medicare-pro-bwiw.onrender.com/api/contact', {
+      const response = await axios.post('http://localhost:5000/api/contact', {
         name: form.name,
         email: form.email,
         message: form.message

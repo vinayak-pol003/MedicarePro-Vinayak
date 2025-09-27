@@ -439,14 +439,25 @@ const CustomTooltip = ({ active, payload, label }) => {
               <p className="text-gray-600 text-sm sm:text-base">
                 Real-time overview based on actual database records • {new Date().toLocaleDateString()}
               </p>
+              
             </div>
 
-            {/* show button only for admins */}
-            {user?.role === "admin" && (
-              <button className="bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700">
-                <Link to="/add-admin">Add Admin</Link>
-              </button>
-            )}
+            {/* Admin buttons - responsive layout */}
+              {user?.role === "admin" && (
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                  <Link to="/add-admin">
+                    <button className="w-full sm:w-auto bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700 text-sm font-medium">
+                      Add Admin
+                    </button>
+                  </Link>
+                  
+                  <Link to="/admin/contacts">
+                    <button className="w-full sm:w-auto bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700 text-sm font-medium">
+                      Query Section
+                    </button>
+                  </Link>
+                </div>
+              )}              
           </div>
         </div>
 

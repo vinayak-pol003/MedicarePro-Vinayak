@@ -26,7 +26,7 @@ export default function AddPatient({ onAdded }) {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await axios.get("https://medicare-pro-bwiw.onrender.com/api/doctors");
+        const response = await axios.get("http://localhost:5000/api/doctors");
         setDoctors(response.data);
         if (response.data.length > 0 && !formData.doctor_id) {
           setFormData(prev => ({ ...prev, doctor_id: response.data[0]._id }));
@@ -72,7 +72,7 @@ const handleSubmit = async (e) => {
   let imageUrl = "";
   try {
     // Fetch authentication params from backend manually
-    const res = await fetch("https://medicare-pro-bwiw.onrender.com/api/imagekit-auth");
+    const res = await fetch("http://localhost:5000/api/imagekit-auth");
     const authParams = await res.json(); // { token, signature, expire }
 
     if (imageFile) {
@@ -103,7 +103,7 @@ const handleSubmit = async (e) => {
       image: imageUrl
     };
 
-    const apiRes = await axios.post("https://medicare-pro-bwiw.onrender.com/api/patients", payload, {
+    const apiRes = await axios.post("http://localhost:5000/api/patients", payload, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

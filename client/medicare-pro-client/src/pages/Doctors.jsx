@@ -17,7 +17,7 @@ export default function Doctors() {
     const fetchDoctors = async () => {
       try {
         setLoading(true);
-        let url = "https://medicare-pro-bwiw.onrender.com/api/doctors";
+        let url = "http://localhost:5000/api/doctors";
         const params = new URLSearchParams();
 
         if (selectedSpecialization) {
@@ -53,7 +53,7 @@ export default function Doctors() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`https://medicare-pro-bwiw.onrender.com/api/doctors/${doctorId}`, {
+      await axios.delete(`http://localhost:5000/api/doctors/${doctorId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

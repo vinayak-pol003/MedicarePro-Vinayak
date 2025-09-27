@@ -53,7 +53,7 @@ export default function DoctorPrescription() {
       const token = localStorage.getItem("token");
       await axios.post(
 
-        `https://medicare-pro-bwiw.onrender.com/api/prescriptions/${id}`,
+        `http://localhost:5000/api/prescriptions/${id}`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -19,7 +19,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://medicare-pro-bwiw.onrender.com", // Adjust to your client URL
+    origin: "http://localhost:3000", // Adjust to your client URL
     methods: ["GET", "POST"]
   }
 });

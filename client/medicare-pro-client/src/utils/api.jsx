@@ -2,8 +2,8 @@ import axios from "axios";
 import { io } from "socket.io-client";
 
 // API Configuration
-const API_BASE_URL = "https://medicare-pro-bwiw.onrender.com/api";
-const SOCKET_URL = "https://medicare-pro-bwiw.onrender.com";
+const API_BASE_URL = "http://localhost:5000/api";
+const SOCKET_URL = "http://localhost:5000";
 
 // Create a custom Axios instance
 const API = axios.create({

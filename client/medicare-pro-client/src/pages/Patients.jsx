@@ -282,7 +282,7 @@ export default function Patients() {
           navigate("/login");
           return;
         }
-        const res = await axios.get("https://medicare-pro-bwiw.onrender.com/api/patients", {
+        const res = await axios.get("http://localhost:5000/api/patients", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setPatients(Array.isArray(res.data) ? res.data : []);
@@ -311,7 +311,7 @@ export default function Patients() {
       setExpandedPatientId(patientId);
 
       const token = localStorage.getItem("token");
-      const res = await axios.get(`https://medicare-pro-bwiw.onrender.com/api/patients/${patientId}`, {
+      const res = await axios.get(`http://localhost:5000/api/patients/${patientId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSelectedPatient(res.data);
@@ -327,7 +327,7 @@ export default function Patients() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `https://medicare-pro-bwiw.onrender.com/api/patients/${patientId}`,
+        `http://localhost:5000/api/patients/${patientId}`,
         updatedData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -382,7 +382,7 @@ export default function Patients() {
     try {
       const token = localStorage.getItem("token");
       
-      const appointmentsRes = await axios.get("https://medicare-pro-bwiw.onrender.com/api/appointments", {
+      const appointmentsRes = await axios.get("http://localhost:5000/api/appointments", {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -391,14 +391,14 @@ export default function Patients() {
       );
       
       const deleteAppointmentPromises = patientAppointments.map(appointment =>
-        axios.delete(`https://medicare-pro-bwiw.onrender.com/api/appointments/${appointment._id}`, {
+        axios.delete(`http://localhost:5000/api/appointments/${appointment._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       );
       
       await Promise.all(deleteAppointmentPromises);
       
-      await axios.delete(`https://medicare-pro-bwiw.onrender.com/api/patients/${id}`, {
+      await axios.delete(`http://localhost:5000/api/patients/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       

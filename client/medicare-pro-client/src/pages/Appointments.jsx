@@ -31,9 +31,9 @@ export default function Appointments() {
         setLoading(true);
         const token = localStorage.getItem('token');
         const [appointmentsRes, patientsRes, doctorsRes] = await Promise.all([
-          axios.get("https://medicare-pro-bwiw.onrender.com/api/appointments", { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get("https://medicare-pro-bwiw.onrender.com/api/patients", { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get("https://medicare-pro-bwiw.onrender.com/api/doctors")
+          axios.get("http://localhost:5000/api/appointments", { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get("http://localhost:5000/api/patients", { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get("http://localhost:5000/api/doctors")
         ]);
         setAppointments(appointmentsRes.data);
         setPatients(patientsRes.data);
@@ -87,10 +87,10 @@ console.log("Available user keys:", user ? Object.keys(user) : "No user");
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post("https://medicare-pro-bwiw.onrender.com/api/appointments", formData, {
+      await axios.post("http://localhost:5000/api/appointments", formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const response = await axios.get("https://medicare-pro-bwiw.onrender.com/api/appointments", {
+      const response = await axios.get("http://localhost:5000/api/appointments", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAppointments(response.data);
@@ -106,11 +106,11 @@ console.log("Available user keys:", user ? Object.keys(user) : "No user");
   const updateAppointmentStatus = async (id, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`https://medicare-pro-bwiw.onrender.com/api/appointments/${id}`,
+      await axios.put(`http://localhost:5000/api/appointments/${id}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` }
       });
-      const response = await axios.get("https://medicare-pro-bwiw.onrender.com/api/appointments", {
+      const response = await axios.get("http://localhost:5000/api/appointments", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAppointments(response.data);
@@ -124,10 +124,10 @@ console.log("Available user keys:", user ? Object.keys(user) : "No user");
     e.stopPropagation();
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`https://medicare-pro-bwiw.onrender.com/api/appointments/${id}`, {
+      await axios.delete(`http://localhost:5000/api/appointments/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const response = await axios.get("https://medicare-pro-bwiw.onrender.com/api/appointments", {
+      const response = await axios.get("http://localhost:5000/api/appointments", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAppointments(response.data);
@@ -173,7 +173,7 @@ console.log("Available user keys:", user ? Object.keys(user) : "No user");
 
   return (
     <FadeInSection>
-      <div className="p-4 sm:p-6 mt-14 sm:mt-16 w-full">
+      <div className="p-4 sm:p-6 mt-14 sm:mt-16 w-full ">
         <div className="bg-cyan-500 w-full p-4 sm:p-6 rounded-lg shadow-md mb-4 sm:mb-6">
           <div className="mb-4 sm:mb-8 bg-cyan-500">
             <div className="flex flex-col sm:flex-row justify-between items-center">

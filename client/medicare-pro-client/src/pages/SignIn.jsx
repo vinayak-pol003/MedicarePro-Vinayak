@@ -17,7 +17,7 @@ export default function SignIn() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("https://medicare-pro-bwiw.onrender.com/api/signin", {
+      const res = await fetch("http://localhost:5000/api/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

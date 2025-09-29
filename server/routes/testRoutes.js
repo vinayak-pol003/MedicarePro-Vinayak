@@ -358,16 +358,171 @@ router.get(
       if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return res.status(400).json({ message: "Invalid patient id." });
       }
-      const patient = await Patient.findById(req.params.id).populate("doctor_id", "name email specialization");
-      if (!patient) {
+
+      const patientWithAllDoctors = await Patient.aggregate([
+        {
+          $match: { _id: new mongoose.Types.ObjectId(req.params.id) }
+        },
+        // Get direct doctor
+        {
+          $lookup: {
+            from: "doctors",
+            localField: "doctor_id",
+            foreignField: "_id", 
+            as: "directDoctor"
+          }
+        },
+        // Get all appointments for this patient
+        {
+          $lookup: {
+            from: "appointments",
+            localField: "_id",
+            foreignField: "patient_id",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "doctors",
+                  localField: "doctor_id", 
+                  foreignField: "_id",
+                  as: "doctor"
+                }
+              },
+              {
+                $unwind: "$doctor"
+              },
+              {
+                $project: {
+                  doctor: {
+                    _id: 1,
+                    name: 1,
+                    email: 1,
+                    specialization: 1,
+                    specialty: 1,
+                    phone: 1,
+                    image: 1,
+                    hospital: 1
+                  },
+                  date: 1,
+                  time: 1,
+                  status: 1,
+                  rating: 1,
+                  createdAt: 1
+                }
+              }
+            ],
+            as: "appointmentsWithDoctors"
+          }
+        },
+        // Project final result
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            email: 1,
+            phone: 1,
+            description: 1,
+            image: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            // Keep original doctor_id populated for backward compatibility
+            doctor_id: { 
+              $cond: {
+                if: { $gt: [{ $size: "$directDoctor" }, 0] },
+                then: { $arrayElemAt: ["$directDoctor", 0] },
+                else: null
+              }
+            },
+            // Add new fields for all assigned doctors
+            directDoctor: { 
+              $cond: {
+                if: { $gt: [{ $size: "$directDoctor" }, 0] },
+                then: { $arrayElemAt: ["$directDoctor", 0] },
+                else: null
+              }
+            },
+            // Get unique doctors from appointments (removing duplicates)
+            appointmentDoctors: {
+              $reduce: {
+                input: "$appointmentsWithDoctors.doctor",
+                initialValue: [],
+                in: {
+                  $cond: {
+                    if: { $in: ["$$this._id", "$$value._id"] },
+                    then: "$$value",
+                    else: { $concatArrays: ["$$value", ["$$this"]] }
+                  }
+                }
+              }
+            },
+            // Full appointment history with doctor details
+            appointmentHistory: "$appointmentsWithDoctors",
+            // Count of unique assigned doctors
+            totalAssignedDoctors: {
+              $add: [
+                { $cond: [{ $gt: [{ $size: "$directDoctor" }, 0] }, 1, 0] },
+                { $size: {
+                  $reduce: {
+                    input: "$appointmentsWithDoctors.doctor",
+                    initialValue: [],
+                    in: {
+                      $cond: {
+                        if: { $in: ["$$this._id", "$$value._id"] },
+                        then: "$$value",
+                        else: { $concatArrays: ["$$value", ["$$this"]] }
+                      }
+                    }
+                  }
+                }}
+              ]
+            }
+          }
+        }
+      ]);
+
+      if (!patientWithAllDoctors.length) {
         return res.status(404).json({ message: "Patient not found." });
       }
+
+      const patient = patientWithAllDoctors[0];
+
+      // **FIXED: Role-based filtering for doctors**
+      if (req.user.role === "doctor") {
+        console.log("Doctor access check:", {
+          userEmail: req.user.email,
+          userId: req.user.id,
+          directDoctor: patient.directDoctor,
+          appointmentDoctors: patient.appointmentDoctors
+        });
+
+        // Check if doctor has access via direct assignment
+        const isDirectlyAssigned = patient.directDoctor && 
+          patient.directDoctor.email === req.user.email;
+
+        // Check if doctor has access via appointments
+        const hasAppointmentAccess = patient.appointmentDoctors && 
+          patient.appointmentDoctors.some(doc => doc.email === req.user.email);
+
+        if (!isDirectlyAssigned && !hasAppointmentAccess) {
+          console.log("Access denied for doctor:", req.user.email);
+          return res.status(403).json({ 
+            message: "Access denied. You can only view patients assigned to you or with whom you have appointments." 
+          });
+        }
+
+        console.log("Access granted for doctor:", req.user.email);
+      }
+
       res.json(patient);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      console.error("Error fetching patient details:", err);
+      res.status(500).json({ 
+        error: err.message,
+        message: "Failed to fetch patient details"
+      });
     }
   }
 );
+
 
 
 // ------------------- APPOINTMENTS -------------------

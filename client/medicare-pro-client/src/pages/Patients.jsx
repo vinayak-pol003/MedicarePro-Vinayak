@@ -5,8 +5,6 @@ import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade";
 import toast from "react-hot-toast";
 
-
-// Patient Profile Expansion Component with role-based edit access
 // Patient Profile Expansion Component with role-based edit access
 function PatientProfileExpansion({ patient, onClose, onSave, loading, error, userRole }) {
   const [editMode, setEditMode] = useState(false);
@@ -15,7 +13,6 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
     name: '',
     phone: '',
     description: ''
-    // Removed email from formData since it's no longer editable
   });
 
   useEffect(() => {
@@ -24,10 +21,46 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
         name: patient.name || '',
         phone: patient.phone || '',
         description: patient.description || ''
-        // Removed email from formData
       });
     }
   }, [patient]);
+
+  // Helper function to get all unique assigned doctors
+  const getAllAssignedDoctors = () => {
+    if (!patient) return [];
+    
+    const doctors = [];
+    
+    // Add direct doctor if exists
+    if (patient.directDoctor) {
+      doctors.push({
+        ...patient.directDoctor,
+        assignmentType: 'Direct Assignment'
+      });
+    }
+    
+    // Add appointment doctors (avoiding duplicates)
+    if (patient.appointmentDoctors && patient.appointmentDoctors.length > 0) {
+      patient.appointmentDoctors.forEach(doc => {
+        // Check if this doctor is already added as direct doctor
+        const isAlreadyAdded = doctors.some(d => d._id === doc._id);
+        if (!isAlreadyAdded) {
+          doctors.push({
+            ...doc,
+            assignmentType: 'Appointment Doctor'
+          });
+        } else {
+          // Update the existing doctor to show both assignment types
+          const existingDoc = doctors.find(d => d._id === doc._id);
+          if (existingDoc) {
+            existingDoc.assignmentType = 'Direct Assignment & Appointments';
+          }
+        }
+      });
+    }
+    
+    return doctors;
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -55,7 +88,6 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
       name: patient?.name || '',
       phone: patient?.phone || '',
       description: patient?.description || ''
-      // Removed email from formData
     });
     setEditMode(false);
   };
@@ -65,7 +97,6 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
       name: patient?.name || '',
       phone: patient?.phone || '',
       description: patient?.description || ''
-      // Removed email from formData
     });
     setEditMode(true);
   };
@@ -184,17 +215,52 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
                 )}
               </div>
 
-              {/* Doctor Information */}
+              {/* UPDATED: All Assigned Doctors Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Doctor</label>
-                <p className="text-gray-800 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200 text-sm">
-                  {patient?.doctor_id?.name || 'Not assigned'}
-                  {patient?.doctor_id?.specialization && (
-                    <span className="text-blue-600 text-xs block">
-                      {patient.doctor_id.specialization}
-                    </span>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Assigned Doctors ({getAllAssignedDoctors().length})
+                </label>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-h-40 overflow-y-auto">
+                  {getAllAssignedDoctors().length === 0 ? (
+                    <p className="text-gray-500 text-sm">No doctors assigned</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {getAllAssignedDoctors().map((doctor, index) => (
+                        <div key={doctor._id} className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
+                          <div className="flex items-center gap-3">
+                            {doctor.image ? (
+                              <img
+                                src={doctor.image}
+                                alt={doctor.name}
+                                className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <span className="text-blue-600 text-xs">👨‍⚕️</span>
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 text-sm truncate">
+                                Dr. {doctor.name}
+                              </p>
+                              <p className="text-blue-600 text-xs">
+                                {doctor.specialization || doctor.specialty || 'General'}
+                              </p>
+                              <p className="text-gray-500 text-xs">
+                                {doctor.assignmentType}
+                              </p>
+                              {doctor.email && (
+                                <p className="text-gray-400 text-xs truncate">
+                                  {doctor.email}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
-                </p>
+                </div>
               </div>
 
               {/* Description Field - Full Width */}
@@ -251,10 +317,55 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
           </div>
         </div>
       </div>
+
+      {/* Optional: Appointment History Section */}
+      {patient?.appointmentHistory && patient.appointmentHistory.length > 0 && (
+        <div className="mt-6 bg-white rounded-lg p-4 shadow-sm">
+          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+            <span className="mr-2">📅</span>
+            Recent Appointments ({patient.appointmentHistory.length})
+          </h4>
+          <div className="space-y-2 max-h-40 overflow-y-auto">
+            {patient.appointmentHistory.slice(0, 5).map((apt, index) => (
+              <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg text-sm">
+                <div className="flex items-center gap-3">
+                  {apt.doctor.image ? (
+                    <img
+                      src={apt.doctor.image}
+                      alt={apt.doctor.name}
+                      className="w-6 h-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 text-xs">👨‍⚕️</span>
+                    </div>
+                  )}
+                  <div>
+                    <span className="font-medium">Dr. {apt.doctor.name}</span>
+                    <span className="text-gray-500 ml-2">({apt.doctor.specialization || apt.doctor.specialty || 'General'})</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-gray-600">
+                    {new Date(apt.date).toLocaleDateString()} at {apt.time}
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    apt.status === 'completed' ? 'bg-green-100 text-green-800' :
+                    apt.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                    apt.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {apt.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
 
 export default function Patients() {
   const { user } = useContext(AuthContext);
@@ -280,8 +391,10 @@ export default function Patients() {
         const res = await axios.get("http://localhost:5000/api/patients", {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log("Patients received:", res.data); // Debug log
         setPatients(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
+        console.error("Error fetching patients:", err);
         setError("Failed to load patients.");
         if (err.response?.status === 401) navigate("/login");
       } finally {
@@ -291,7 +404,7 @@ export default function Patients() {
     fetchPatients();
   }, [navigate]);
 
-  // Fetch individual patient details and toggle expansion
+  // Enhanced fetch patient details with better error handling
   const fetchPatientDetail = async (patientId) => {
     try {
       if (expandedPatientId === patientId) {
@@ -309,9 +422,20 @@ export default function Patients() {
       const res = await axios.get(`http://localhost:5000/api/patients/${patientId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      
+      console.log("Patient data received:", res.data);
       setSelectedPatient(res.data);
     } catch (err) {
-      setPatientError("Error loading patient details.");
+      console.error("Error fetching patient details:", err);
+      
+      // Enhanced error handling
+      if (err.response?.status === 403) {
+        setPatientError("Access denied. You don't have permission to view this patient's details.");
+      } else if (err.response?.status === 404) {
+        setPatientError("Patient not found.");
+      } else {
+        setPatientError("Error loading patient details.");
+      }
     } finally {
       setPatientLoading(false);
     }
@@ -348,14 +472,9 @@ export default function Patients() {
     setPatientError("");
   };
 
-  // Filter patients for doctor-only view
-  const visiblePatients = user?.role === "doctor"
-    ? patients.filter(patient => {
-        const patientDoctorEmail = patient.doctor_id?.email;
-        const currentUserEmail = user.email;
-        return patientDoctorEmail === currentUserEmail;
-      })
-    : patients;
+  // REMOVED: Doctor role filtering is now handled on backend
+  // All patients returned from API are already filtered by backend
+  const visiblePatients = patients;
 
   const handleDelete = async (id) => {
     const patient = patients.find(p => p._id === id);
@@ -363,16 +482,6 @@ export default function Patients() {
     
     const confirmMessage = `Are you sure you want to delete ${patientName}?\n\nThis will also delete all appointments associated with this patient.`;
     if (!window.confirm(confirmMessage)) return;
-    
-    // Security check for doctors (though they shouldn't see delete button anyway)
-    if (user?.role === "doctor") {
-      const patientDoctorEmail = patient?.doctor_id?.email;
-      
-      if (patientDoctorEmail !== user.email) {
-        toast.error("You can only delete your own patients");
-        return;
-      }
-    }
     
     try {
       const token = localStorage.getItem("token");
@@ -448,19 +557,20 @@ export default function Patients() {
                 </h1>
                 <p className="text-gray-600 text-sm sm:text-base">
                   {user?.role === "doctor" 
-                    ? "Manage and track your patients" 
+                    ? "Patients assigned to you and with appointments" 
                     : "Manage and track all patients"}
                 </p>
               </div>
               {user?.role === "admin" && (
-        <Link to="/addpatient" className="w-full sm:w-auto mt-2 sm:mt-0">
-          <button className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto">
-            Add Patient
-          </button>
-        </Link>
-      )}
+                <Link to="/addpatient" className="w-full sm:w-auto mt-2 sm:mt-0">
+                  <button className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto">
+                    Add Patient
+                  </button>
+                </Link>
+              )}
             </div>
           </div>
+          
           {/* Filters */}
           <div className="bg-cyan-500 rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
             <div className="flex flex-col md:flex-row gap-4">
@@ -494,23 +604,23 @@ export default function Patients() {
           </div>
         </div>
 
-        {/* Patient Cards - Simplified Design */}
+        {/* Patient Cards */}
         <div className="space-y-3">
           {filteredPatients.length === 0 && (
             <div className="text-gray-400 text-center py-6">
               {user?.role === "doctor" 
-                ? `No patients found. ${filter || statusFilter ? "Try adjusting your search criteria." : "You have no patients assigned to you."}`
+                ? `No patients found. ${filter || statusFilter ? "Try adjusting your search criteria." : "You have no patients assigned or appointments scheduled."}`
                 : "No patients found."}
             </div>
           )}
           
           {filteredPatients.map((p) => (
             <Fragment key={p._id}>
-              {/* Simple Patient Card */}
+              {/* Patient Card with enhanced indicators */}
               <div className="bg-white border border-gray-200 rounded-lg p-4 hover:border-cyan-300 hover:shadow-md transition-all">
                 <div className="flex items-center gap-4">
-                  {/* Square Patient Image */}
-                  <div className="w-16 h-16 bg-gray-100 border border-gray-200 overflow-hidden">
+                  {/* Patient Image */}
+                  <div className="w-16 h-16 bg-gray-100 border border-gray-200 overflow-hidden rounded-lg">
                     {p.image ? (
                       <img
                         src={p.image}
@@ -524,9 +634,26 @@ export default function Patients() {
                     )}
                   </div>
 
-                  {/* Patient Info - Right of Image */}
+                  {/* Patient Info with relationship indicators */}
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 text-lg">{p.name}</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-gray-900 text-lg">{p.name}</h3>
+                      {/* Enhanced indicators for doctors */}
+                      {user?.role === "doctor" && (
+                        <div className="flex gap-1">
+                          {p.doctor_id?.email === user?.email && (
+                            <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium">
+                              Direct Patient
+                            </span>
+                          )}
+                          {p.hasAppointments && (
+                            <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">
+                              Has Appointments
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <p className="text-gray-600 text-sm">{p.email || "No email"}</p>
                     <p className="text-gray-600 text-sm">{p.phone || "No phone"}</p>
                     {user?.role !== "doctor" && (
@@ -551,7 +678,6 @@ export default function Patients() {
                     >
                       {expandedPatientId === p._id ? 'Hide ▲' : 'View ▼'}
                     </button>
-                    {/* Only show delete button to admins */}
                     {user?.role === "admin" && (
                       <button
                         onClick={() => handleDelete(p._id)}

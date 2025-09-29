@@ -5,14 +5,31 @@ import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade.jsx";
 import toast from "react-hot-toast";
 
-// Interactive Star rating component
-const RatingStars = ({ rating = 0, appointmentId, onRatingUpdate, disabled = false }) => {
+// Interactive Star rating component - UPDATED with completion and one-time restrictions
+const RatingStars = ({ rating = 0, appointmentId, onRatingUpdate, disabled = false, status, hasExistingRating = false }) => {
   const [hoveredRating, setHoveredRating] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
   const { user } = useContext(AuthContext);
 
+  // Check if rating should be disabled
+  const isDisabled = disabled || 
+    status !== 'completed' || // Only allow rating for completed appointments
+    hasExistingRating || // Don't allow rating if already rated
+    isUpdating;
+
   const handleStarClick = async (selectedRating) => {
-    if (disabled || isUpdating) return;
+    if (isDisabled) return;
+    
+    // Double-check restrictions before API call
+    if (status !== 'completed') {
+      toast.error('You can only rate completed appointments');
+      return;
+    }
+
+    if (hasExistingRating) {
+      toast.error('You have already rated this appointment');
+      return;
+    }
     
     try {
       setIsUpdating(true);
@@ -30,7 +47,7 @@ const RatingStars = ({ rating = 0, appointmentId, onRatingUpdate, disabled = fal
       if (response.data) {
         // Call parent component to update the appointment list
         onRatingUpdate(appointmentId, selectedRating);
-        toast.success(`Rating updated to ${selectedRating} star${selectedRating !== 1 ? 's' : ''}!`);
+        toast.success(`Thank you for rating this appointment ${selectedRating} star${selectedRating !== 1 ? 's' : ''}!`);
       }
     } catch (error) {
       console.error('Error updating rating:', error);
@@ -41,7 +58,7 @@ const RatingStars = ({ rating = 0, appointmentId, onRatingUpdate, disabled = fal
   };
 
   const handleStarHover = (hoverRating) => {
-    if (!disabled && !isUpdating) {
+    if (!isDisabled) {
       setHoveredRating(hoverRating);
     }
   };
@@ -52,14 +69,30 @@ const RatingStars = ({ rating = 0, appointmentId, onRatingUpdate, disabled = fal
 
   const displayRating = hoveredRating || rating;
 
+  // Helper function to get appropriate tooltip message
+  const getTooltipMessage = () => {
+    if (status !== 'completed') {
+      return 'Rating available only after appointment completion';
+    }
+    if (hasExistingRating) {
+      return 'You have already rated this appointment';
+    }
+    if (status === 'cancelled') {
+      return 'Cannot rate cancelled appointments';
+    }
+    return `Rate ${hoveredRating || 'this appointment'}`;
+  };
+
   return (
     <div className="flex items-center gap-1">
       <div className="flex" onMouseLeave={handleMouseLeave}>
         {[1, 2, 3, 4, 5].map((starValue) => (
           <span
             key={starValue}
-            className={`text-xl cursor-pointer transition-all duration-200 ${
-              disabled || isUpdating ? 'cursor-not-allowed opacity-50' : 'hover:scale-110'
+            className={`text-xl transition-all duration-200 ${
+              isDisabled 
+                ? 'cursor-not-allowed opacity-50' 
+                : 'cursor-pointer hover:scale-110'
             }`}
             style={{
               color: starValue <= displayRating ? "#facc15" : "#d1c9e6",
@@ -68,7 +101,7 @@ const RatingStars = ({ rating = 0, appointmentId, onRatingUpdate, disabled = fal
             }}
             onClick={() => handleStarClick(starValue)}
             onMouseEnter={() => handleStarHover(starValue)}
-            title={disabled ? 'Rating not available' : `Rate ${starValue} star${starValue !== 1 ? 's' : ''}`}
+            title={getTooltipMessage()}
           >
             ★
           </span>
@@ -82,9 +115,29 @@ const RatingStars = ({ rating = 0, appointmentId, onRatingUpdate, disabled = fal
         </div>
       )}
       
+      {/* Status-based message display */}
       {rating > 0 && !isUpdating && (
         <span className="ml-1 text-xs text-gray-500">
-          ({rating}/5)
+          ({rating}/5) {hasExistingRating && '✓'}
+        </span>
+      )}
+
+      {/* Helper text for different states */}
+      {!rating && status !== 'completed' && (
+        <span className="ml-1 text-xs text-gray-400">
+          Rate after completion
+        </span>
+      )}
+      
+      {!rating && status === 'completed' && !hasExistingRating && (
+        <span className="ml-1 text-xs text-green-600">
+          Click to rate
+        </span>
+      )}
+
+      {hasExistingRating && (
+        <span className="ml-1 text-xs text-blue-600">
+          Rated
         </span>
       )}
     </div>
@@ -205,7 +258,7 @@ const MyAppointments = () => {
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [expandedRow, setExpandedRow] = useState(null); // Track which row is expanded
+  const [expandedRow, setExpandedRow] = useState(null);
   const [doctorLoading, setDoctorLoading] = useState(false);
   const [doctorError, setDoctorError] = useState("");
 
@@ -247,12 +300,17 @@ const MyAppointments = () => {
     fetchAppointments();
   };
 
-  // Handle rating updates
+  // Handle rating updates with validation
   const handleRatingUpdate = (appointmentId, newRating) => {
     setAppointments(prevAppointments =>
       prevAppointments.map(apt =>
         apt._id === appointmentId 
-          ? { ...apt, rating: newRating }
+          ? { 
+              ...apt, 
+              rating: newRating,
+              // Mark as rated to prevent future ratings
+              hasBeenRated: true 
+            }
           : apt
       )
     );
@@ -261,7 +319,6 @@ const MyAppointments = () => {
   // Fetch doctor info and toggle expanded row
   const fetchDoctorDetail = async (doctorId, appointmentId) => {
     try {
-      // If clicking the same doctor, just toggle
       if (expandedRow === appointmentId) {
         setExpandedRow(null);
         setSelectedDoctor(null);
@@ -316,7 +373,7 @@ const MyAppointments = () => {
                  My Appointments
                 </h1>
                 <p className="text-gray-600 text-sm sm:text-base">
-                  Track all your appointments
+                  Track all your appointments and rate completed ones
                 </p>
               </div>
             </div>
@@ -371,6 +428,7 @@ const MyAppointments = () => {
               {loading ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
+          
           {loading ? (
             <div className="flex items-center justify-center h-48 sm:h-64">
               <div className="animate-spin rounded-full h-8 sm:h-12 w-8 sm:w-12 border-b-2 border-cyan-600"></div>
@@ -400,72 +458,86 @@ const MyAppointments = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAppointments.map((apt, idx) => (
-                    <React.Fragment key={apt._id}>
-                      <tr
-                        className={idx % 2 === 1 ? "bg-cyan-50" : ""}
-                      >
-                        <td className="py-2 sm:py-4 px-2 sm:px-6">{shortDate(apt.date)}</td>
-                        <td className="py-2 sm:py-4 px-2 sm:px-6">{formatTimeToIST(apt.time)}</td>
-                        <td className="py-2 sm:py-4 px-2 sm:px-6 font-semibold">
-                          <span
-                            className="text-cyan-600 hover:underline cursor-pointer hover:bg-cyan-100 px-2 py-1 rounded transition-colors"
-                            onClick={() =>
-                              fetchDoctorDetail(
-                                apt.doctor_id?._id || apt.doctor_id,
-                                apt._id
-                              )
-                            }
-                          >
-                            {apt.doctor_id?.name || "Unknown"}
-                            {expandedRow === apt._id && (
-                              <span className="ml-2 text-xs">▼</span>
-                            )}
-                          </span>
-                        </td>
-                        <td className="py-2 sm:py-4 px-2 sm:px-6">
-                          {apt.doctor_id?.specialization || ""}
-                        </td>
-                        <td className="py-2 sm:py-4 px-2 sm:px-6 capitalize">{apt.status}</td>
-                        <td className="py-2 sm:py-4 px-2 sm:px-6">
-                          <RatingStars 
-                            rating={apt.rating || 0} 
-                            appointmentId={apt._id}
-                            onRatingUpdate={handleRatingUpdate}
-                            disabled={apt.status === 'cancelled'} // Disable rating for cancelled appointments
-                          />
-                        </td>
-                        <td className="py-2 sm:py-4 px-2 sm:px-6">
-                          {apt.prescription &&
-                          apt.prescription !== "null" &&
-                          apt.prescription !== null &&
-                          apt.prescription !== undefined ? (
-                            <Link
-                              to={`/myprescription/${apt._id}`}
-                              className="text-cyan-600 hover:underline"
+                  {filteredAppointments.map((apt, idx) => {
+                    // Check if appointment has been rated
+                    const hasExistingRating = (apt.rating && apt.rating > 0) || apt.hasBeenRated;
+                    
+                    return (
+                      <React.Fragment key={apt._id}>
+                        <tr className={idx % 2 === 1 ? "bg-cyan-50" : ""}>
+                          <td className="py-2 sm:py-4 px-2 sm:px-6">{shortDate(apt.date)}</td>
+                          <td className="py-2 sm:py-4 px-2 sm:px-6">{formatTimeToIST(apt.time)}</td>
+                          <td className="py-2 sm:py-4 px-2 sm:px-6 font-semibold">
+                            <span
+                              className="text-cyan-600 hover:underline cursor-pointer hover:bg-cyan-100 px-2 py-1 rounded transition-colors"
+                              onClick={() =>
+                                fetchDoctorDetail(
+                                  apt.doctor_id?._id || apt.doctor_id,
+                                  apt._id
+                                )
+                              }
                             >
-                              View
-                            </Link>
-                          ) : (
-                            <span className="text-gray-500">Not added</span>
-                          )}
-                        </td>
-                      </tr>
-                      {/* Expanded Doctor Details Row */}
-                      {expandedRow === apt._id && (
-                        <tr>
-                          <td colSpan="7" className="p-0 bg-gray-50">
-                            <DoctorDetailsCard
-                              doctor={selectedDoctor}
-                              loading={doctorLoading}
-                              error={doctorError}
-                              onClose={closeDoctorDetails}
+                              {apt.doctor_id?.name || "Unknown"}
+                              {expandedRow === apt._id && (
+                                <span className="ml-2 text-xs">▼</span>
+                              )}
+                            </span>
+                          </td>
+                          <td className="py-2 sm:py-4 px-2 sm:px-6">
+                            {apt.doctor_id?.specialization || ""}
+                          </td>
+                          <td className="py-2 sm:py-4 px-2 sm:px-6">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                              apt.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              apt.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                              apt.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {apt.status}
+                            </span>
+                          </td>
+                          <td className="py-2 sm:py-4 px-2 sm:px-6">
+                            <RatingStars 
+                              rating={apt.rating || 0} 
+                              appointmentId={apt._id}
+                              onRatingUpdate={handleRatingUpdate}
+                              status={apt.status}
+                              hasExistingRating={hasExistingRating}
+                              disabled={apt.status === 'cancelled'}
                             />
                           </td>
+                          <td className="py-2 sm:py-4 px-2 sm:px-6">
+                            {apt.prescription &&
+                            apt.prescription !== "null" &&
+                            apt.prescription !== null &&
+                            apt.prescription !== undefined ? (
+                              <Link
+                                to={`/myprescription/${apt._id}`}
+                                className="text-cyan-600 hover:underline"
+                              >
+                                View
+                              </Link>
+                            ) : (
+                              <span className="text-gray-500">Not added</span>
+                            )}
+                          </td>
                         </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
+                        {/* Expanded Doctor Details Row */}
+                        {expandedRow === apt._id && (
+                          <tr>
+                            <td colSpan="7" className="p-0 bg-gray-50">
+                              <DoctorDetailsCard
+                                doctor={selectedDoctor}
+                                loading={doctorLoading}
+                                error={doctorError}
+                                onClose={closeDoctorDetails}
+                              />
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
               <div className="py-2 sm:py-4"></div>

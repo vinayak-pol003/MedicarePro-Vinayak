@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import FadeInSection from '../utils/Fade';
 
 const AdminContacts = () => {
   const [contacts, setContacts] = useState([]);
@@ -94,7 +95,8 @@ const AdminContacts = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 mt-14 sm:mt-16">
+    <FadeInSection>
+      <div className="min-h-screen bg-gray-50 mt-14 sm:mt-16">
       {/* Header Section - Keep as-is with original spacing */}
       <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
         <div className="bg-cyan-500 rounded-lg shadow-md p-4 sm:p-6 mb-6">
@@ -316,6 +318,8 @@ const AdminContacts = () => {
         </div>
       </div>
     </div>
+    </FadeInSection>
+    
   );
 };
 

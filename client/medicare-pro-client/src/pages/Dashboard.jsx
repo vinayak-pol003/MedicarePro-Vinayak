@@ -78,55 +78,86 @@ export default function Dashboard() {
     };
 
     // Group appointments by day of week
-    const groupAppointmentsByDay = () => {
-      const weekDates = getCurrentWeekDates();
-      
-      // Initialize with 0 appointments for each day
-      const dayGroups = weekDates.reduce((groups, dayInfo) => {
-        groups[dayInfo.dayName] = {
-          day: dayInfo.dayName,
-          fullDay: dayInfo.fullDayName,
-          appointments: 0,
-          appointmentsList: [],
-          date: dayInfo.date,
-          isToday: dayInfo.date === new Date().toISOString().split('T')[0]
-        };
-        return groups;
-      }, {});
-
-      // Count actual appointments for each day
-      appointments.forEach(appointment => {
-        if (appointment.date) {
-          try {
-            // Extract date part from appointment date
-            const appointmentDate = appointment.date.includes('T') 
-              ? appointment.date.split('T')[0] 
-              : appointment.date;
-            
-            const dayName = getDayName(appointmentDate);
-            
-            if (dayGroups[dayName]) {
-              dayGroups[dayName].appointments++;
-              dayGroups[dayName].appointmentsList.push({
-                id: appointment._id,
-                patientName: appointment.patient_id?.name || 'Unknown',
-                doctorName: appointment.doctor_id?.name || 'Unknown',
-                time: appointment.time,
-                status: appointment.status
-              });
-            }
-          } catch (err) {
-            console.warn('Error processing appointment date:', appointment.date, err);
-          }
-        }
-      });
-
-      // Convert to array format for chart
-      return Object.values(dayGroups).sort((a, b) => {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        return days.indexOf(a.day) - days.indexOf(b.day);
-      });
+   // Group appointments by day of week - FIXED to only show appointments for THIS WEEK
+const groupAppointmentsByDay = () => {
+  const weekDates = getCurrentWeekDates();
+  
+  // Initialize with 0 appointments for each day
+  const dayGroups = weekDates.reduce((groups, dayInfo) => {
+    groups[dayInfo.dayName] = {
+      day: dayInfo.dayName,
+      fullDay: dayInfo.fullDayName,
+      appointments: 0,
+      appointmentsList: [],
+      date: dayInfo.date,
+      isToday: dayInfo.date === new Date().toISOString().split('T')[0]
     };
+    return groups;
+  }, {});
+
+  console.log("=== CURRENT WEEK DATES ===");
+  console.log("Week dates:", weekDates.map(d => `${d.dayName}: ${d.date}`));
+  
+  // Get current week date range for filtering
+  const currentWeekDates = weekDates.map(d => d.date); // Array of this week's dates
+  const startOfWeek = weekDates[0].date; // Sunday
+  const endOfWeek = weekDates[6].date;   // Saturday
+  
+  console.log(`Current week range: ${startOfWeek} to ${endOfWeek}`);
+
+  // FIXED: Only count appointments that fall within THIS WEEK's date range
+  appointments.forEach(appointment => {
+    if (appointment.date) {
+      try {
+        // Extract date part from appointment date
+        const appointmentDate = appointment.date.includes('T') 
+          ? appointment.date.split('T')[0] 
+          : appointment.date;
+        
+        console.log(`Checking appointment date: ${appointmentDate}`);
+        
+        // CRITICAL FIX: Only include appointments from this week
+        if (currentWeekDates.includes(appointmentDate)) {
+          const dayName = getDayName(appointmentDate);
+          
+          console.log(`✅ Appointment ${appointmentDate} is in current week (${dayName})`);
+          
+          if (dayGroups[dayName]) {
+            dayGroups[dayName].appointments++;
+            dayGroups[dayName].appointmentsList.push({
+              id: appointment._id,
+              patientName: appointment.patient_id?.name || 'Unknown',
+              doctorName: appointment.doctor_id?.name || 'Unknown',
+              time: appointment.time,
+              status: appointment.status,
+              date: appointmentDate
+            });
+          }
+        } else {
+          console.log(`❌ Appointment ${appointmentDate} is NOT in current week - EXCLUDED`);
+        }
+      } catch (err) {
+        console.warn('Error processing appointment date:', appointment.date, err);
+      }
+    }
+  });
+
+  const result = Object.values(dayGroups).sort((a, b) => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days.indexOf(a.day) - days.indexOf(b.day);
+  });
+  
+  console.log("=== WEEKLY APPOINTMENTS RESULT ===");
+  result.forEach(day => {
+    console.log(`${day.day} (${day.date}): ${day.appointments} appointments`);
+    if (day.appointments > 0) {
+      console.log("  Appointments:", day.appointmentsList.map(apt => `${apt.time} - ${apt.patientName}`));
+    }
+  });
+  
+  return result;
+};
+
 
     // REAL PATIENT GROWTH - Count patients by createdAt month
     const generateRealPatientGrowth = () => {

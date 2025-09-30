@@ -8,6 +8,8 @@ import bgImage from "../assets/bg.png";
 import FadeInSection from "../utils/Fade";
 import { AuthContext } from "../contex/AuthContext.jsx";
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 const ContactUs = () => {
   const { user } = useContext(AuthContext);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -32,7 +34,7 @@ const ContactUs = () => {
     e.preventDefault();
     
     try {
-      const response = await axios.post('http://localhost:5000/api/contact', {
+      const response = await axios.post(`${BASE_URL}/api/contact`, {
         name: form.name,
         email: form.email,
         message: form.message

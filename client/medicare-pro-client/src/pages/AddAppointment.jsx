@@ -9,6 +9,8 @@ import bgImage from "../assets/bg.png";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade";
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 export default function AddAppointment({ onAdded }) {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -49,7 +51,7 @@ export default function AddAppointment({ onAdded }) {
   const fetchAppointments = useCallback(async () => {
     try {
       const token = user?.token || localStorage.getItem("token") || "";
-      const appointmentsRes = await axios.get("http://localhost:5000/api/appointments", {
+      const appointmentsRes = await axios.get(`${BASE_URL}/api/appointments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -127,10 +129,10 @@ export default function AddAppointment({ onAdded }) {
       const token = user?.token || localStorage.getItem("token") || "";
 
       const [patientsRes, doctorsRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/patients", {
+        axios.get(`${BASE_URL}/api/patients`, {
           headers: { Authorization: `Bearer ${token}` },
         }).catch(() => ({ data: [] })),
-        axios.get("http://localhost:5000/api/doctors").catch(() => ({ data: [] }))
+        axios.get(`${BASE_URL}/api/doctors`).catch(() => ({ data: [] }))
       ]);
 
       setPatients(patientsRes.data || []);
@@ -252,7 +254,7 @@ export default function AddAppointment({ onAdded }) {
 
     const token = user?.token || localStorage.getItem("token") || "";
 
-    await axios.post("http://localhost:5000/api/appointments", formData, {
+    await axios.post(`${BASE_URL}/api/appointments`, formData, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

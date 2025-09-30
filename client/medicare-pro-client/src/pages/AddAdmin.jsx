@@ -6,6 +6,9 @@ import FadeInSection from "../utils/Fade";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import toast from 'react-hot-toast';
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+
 export default function AddAdmin() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -43,7 +46,7 @@ export default function AddAdmin() {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/users", {
+      const res = await fetch(`${BASE_URL}/api/users`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -82,7 +85,7 @@ export default function AddAdmin() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`http://localhost:5000/api/users/${adminId}`, {
+      const res = await fetch(`${BASE_URL}/api/users/${adminId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -108,7 +111,7 @@ export default function AddAdmin() {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:5000/api/users", {
+      const res = await fetch(`${BASE_URL}/api/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, role }),

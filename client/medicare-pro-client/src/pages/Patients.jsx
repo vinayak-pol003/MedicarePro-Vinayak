@@ -5,6 +5,10 @@ import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade";
 import toast from "react-hot-toast";
 
+
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+
 // Patient Profile Expansion Component with role-based edit access
 function PatientProfileExpansion({ patient, onClose, onSave, loading, error, userRole }) {
   const [editMode, setEditMode] = useState(false);
@@ -271,10 +275,10 @@ export default function Patients() {
         }
 
         const [patientsRes, appointmentsRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/patients", {
+          axios.get(`${BASE_URL}/api/patients`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("http://localhost:5000/api/appointments", {
+          axios.get(`${BASE_URL}/api/appointments`, {
             headers: { Authorization: `Bearer ${token}` },
           })
         ]);
@@ -334,7 +338,7 @@ export default function Patients() {
       setExpandedPatientId(patientId);
 
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:5000/api/patients/${patientId}`, {
+      const res = await axios.get(`${BASE_URL}/api/patients/${patientId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -358,7 +362,7 @@ export default function Patients() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/patients/${patientId}`,
+        `${BASE_URL}/api/patients/${patientId}`,
         updatedData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -399,14 +403,14 @@ export default function Patients() {
       );
       
       const deleteAppointmentPromises = patientAppointments.map(appointment =>
-        axios.delete(`http://localhost:5000/api/appointments/${appointment._id}`, {
+        axios.delete(`${BASE_URL}/api/appointments/${appointment._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       );
       
       await Promise.all(deleteAppointmentPromises);
       
-      await axios.delete(`http://localhost:5000/api/patients/${id}`, {
+      await axios.delete(`${BASE_URL}/api/patients/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       

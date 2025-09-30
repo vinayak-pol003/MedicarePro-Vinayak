@@ -6,7 +6,7 @@ import FadeInSection from "../utils/Fade.jsx";
 import imagekit from "../utils/imagekit.jsx";
 import { useNavigate } from "react-router-dom";
 
-
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function AddDoctor({ onAdded }) {
   const { user } = useContext(AuthContext);
@@ -66,7 +66,7 @@ export default function AddDoctor({ onAdded }) {
   try {
     if (imageFile) {
       // Fetch auth params and upload to ImageKit cloud
-      const res = await fetch("http://localhost:5000/api/imagekit-auth");
+      const res = await fetch(`${BASE_URL}/api/imagekit-auth`);
       const authParams = await res.json();
 
       imageUrl = await new Promise((resolve, reject) => {
@@ -96,12 +96,12 @@ export default function AddDoctor({ onAdded }) {
     };
     delete doctorPayload.password; // don't send password to doctor profile
 
-    const doctorRes = await axios.post("http://localhost:5000/api/doctors", doctorPayload, {
+    const doctorRes = await axios.post(`${BASE_URL}/api/doctors`, doctorPayload, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     // 2. Create user account for doctor login
-    await axios.post("http://localhost:5000/api/users", {
+    await axios.post(`${BASE_URL}/api/users`, {
       name: formData.name,
       email: formData.email,
       password: formData.password,

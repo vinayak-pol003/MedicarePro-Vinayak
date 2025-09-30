@@ -10,6 +10,10 @@ import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from "react-icons/fa";
 import FadeInSection from "../utils/Fade";
 import toast from "react-hot-toast";
 
+
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+
 const LEFT_PANEL_WIDTH = 320;
 
 const Profile = () => {
@@ -35,7 +39,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/profile", {
+        const res = await axios.get(`${BASE_URL}/api/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(res.data);
@@ -113,7 +117,7 @@ const Profile = () => {
 
       // Update database only if there are changes to DB fields
       if (Object.keys(dbUpdateData).length > 0) {
-        const response = await axios.put("http://localhost:5000/api/profile", dbUpdateData, {
+        const response = await axios.put(`${BASE_URL}/api/profile`, dbUpdateData, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

@@ -5,6 +5,8 @@ import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade.jsx";
 import toast from "react-hot-toast";
 
+
+
 // Interactive Star rating component - UPDATED with completion and one-time restrictions
 const RatingStars = ({ rating = 0, appointmentId, onRatingUpdate, disabled = false, status, hasExistingRating = false }) => {
   const [hoveredRating, setHoveredRating] = useState(0);

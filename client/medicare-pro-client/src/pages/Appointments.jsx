@@ -5,6 +5,8 @@ import AddAppointment from "./AddAppointment.jsx";
 import { Link, useNavigate } from "react-router-dom";
 import FadeInSection from "../utils/Fade.jsx";
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 export default function Appointments() {
   const { user } = useContext(AuthContext);
   const [appointments, setAppointments] = useState([]);
@@ -31,9 +33,9 @@ export default function Appointments() {
         setLoading(true);
         const token = localStorage.getItem('token');
         const [appointmentsRes, patientsRes, doctorsRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/appointments", { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get("http://localhost:5000/api/patients", { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get("http://localhost:5000/api/doctors")
+          axios.get(`${BASE_URL}/api/appointments`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${BASE_URL}/api/patients`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${BASE_URL}/api/doctors`)
         ]);
         setAppointments(appointmentsRes.data);
         setPatients(patientsRes.data);
@@ -87,10 +89,10 @@ console.log("Available user keys:", user ? Object.keys(user) : "No user");
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post("http://localhost:5000/api/appointments", formData, {
+      await axios.post(`${BASE_URL}/api/appointments`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const response = await axios.get("http://localhost:5000/api/appointments", {
+      const response = await axios.get(`${BASE_URL}/api/appointments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAppointments(response.data);
@@ -106,11 +108,11 @@ console.log("Available user keys:", user ? Object.keys(user) : "No user");
   const updateAppointmentStatus = async (id, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/appointments/${id}`,
+      await axios.put(`${BASE_URL}/api/appointments/${id}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` }
       });
-      const response = await axios.get("http://localhost:5000/api/appointments", {
+      const response = await axios.get(`${BASE_URL}/api/appointments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAppointments(response.data);
@@ -124,10 +126,10 @@ console.log("Available user keys:", user ? Object.keys(user) : "No user");
     e.stopPropagation();
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/appointments/${id}`, {
+      await axios.delete(`${BASE_URL}/api/appointments/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const response = await axios.get("http://localhost:5000/api/appointments", {
+      const response = await axios.get(`${BASE_URL}/api/appointments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAppointments(response.data);

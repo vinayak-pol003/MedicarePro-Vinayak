@@ -233,7 +233,7 @@ const handleDownloadPDF = () => {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(0, 0, 0);
-  doc.text(`Dr. ${prescription.doctor?.name || "Doctor Name"}`, pageWidth - margin - 50, signatureY + 8, { align: 'center' });
+  doc.text(`${prescription.doctor?.name || "Doctor Name"}`, pageWidth - margin - 50, signatureY + 8, { align: 'center' });
   
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
@@ -328,7 +328,7 @@ const handleDownloadPDF = () => {
         <!-- Signature -->
         <div style="margin-top: 40px; text-align: right;">
           <div style="border-bottom: 1px solid #000; width: 200px; margin-left: auto; margin-bottom: 5px;"></div>
-          <p style="margin: 0;"><strong>Dr. ${prescription.doctor?.name || ""}</strong></p>
+          <p style="margin: 0;"><strong>${prescription.doctor?.name || ""}</strong></p>
           <p style="margin: 0; font-size: 12px;">${prescription.doctor?.specialization || ""}</p>
         </div>
 

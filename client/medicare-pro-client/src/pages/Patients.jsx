@@ -5,12 +5,11 @@ import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade";
 import toast from "react-hot-toast";
 
-
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-
 // Patient Profile Expansion Component with role-based edit access
-function PatientProfileExpansion({ patient, onClose, onSave, loading, error, userRole }) {
+// Patient Profile Expansion Component with role-based edit access
+function PatientProfileExpansion({ patient, onClose, onSave, loading, error, userRole, appointments }) {
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -68,6 +67,85 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
     setEditMode(true);
   };
 
+  // Get unique doctors from appointments
+  const getAssociatedDoctors = () => {
+    if (!appointments || !patient) return [];
+    
+    const patientAppointments = appointments.filter(apt => 
+      String(apt.patient_id?._id || apt.patient_id) === String(patient._id)
+    );
+
+    const doctorMap = new Map();
+
+    // Add directly assigned doctor
+    if (patient.doctor_id) {
+      doctorMap.set(patient.doctor_id._id, {
+        ...patient.doctor_id,
+        assignmentType: 'direct'
+      });
+    }
+
+    // Add doctors from appointments
+    patientAppointments.forEach(apt => {
+      if (apt.doctor_id && apt.doctor_id._id) {
+        if (!doctorMap.has(apt.doctor_id._id)) {
+          doctorMap.set(apt.doctor_id._id, {
+            ...apt.doctor_id,
+            assignmentType: 'appointment'
+          });
+        } else {
+          const existing = doctorMap.get(apt.doctor_id._id);
+          if (existing.assignmentType !== 'direct') {
+            existing.assignmentType = 'appointment';
+          }
+        }
+      }
+    });
+
+    return Array.from(doctorMap.values());
+  };
+
+  // Get patient's recent appointments
+  const getRecentAppointments = () => {
+    if (!appointments || !patient) return [];
+    
+    const patientAppointments = appointments.filter(apt => 
+      String(apt.patient_id?._id || apt.patient_id) === String(patient._id)
+    );
+
+    return patientAppointments
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5);
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
+
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '';
+    const [h, m] = timeStr.split(':');
+    let hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
+    return `${hour}:${m} ${ampm}`;
+  };
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      scheduled: 'bg-blue-100 text-blue-800 border-blue-200',
+      completed: 'bg-green-100 text-green-800 border-green-200',
+      cancelled: 'bg-red-100 text-red-800 border-red-200'
+    };
+    return badges[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
   if (loading) {
     return (
       <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-l-4 border-cyan-500 p-6 rounded-lg shadow-lg animate-fadeIn">
@@ -94,10 +172,13 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
     );
   }
 
+  const associatedDoctors = getAssociatedDoctors();
+  const recentAppointments = getRecentAppointments();
+
   return (
-    <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-l-4 border-cyan-500 p-6 rounded-lg shadow-lg animate-fadeIn">
+    <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-l-4 border-cyan-500 p-6 rounded-lg shadow-lg animate-fadeIn space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex justify-between items-start">
         <h3 className="text-xl font-bold text-cyan-700 flex items-center">
           <span className="mr-2">👤</span>
           Patient Profile Details
@@ -110,6 +191,7 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
         </button>
       </div>
 
+      {/* Patient Info Section */}
       <div className="grid md:grid-cols-3 gap-6">
         {/* Patient Image */}
         <div className="text-center">
@@ -161,6 +243,41 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
                 </p>
               </div>
 
+              {/* Associated Doctors Field - NEW POSITION */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Associated Doctors ({associatedDoctors.length})</label>
+                {associatedDoctors.length === 0 ? (
+                  <div className="text-center py-3 text-gray-500 text-sm bg-gray-50 rounded-lg border border-gray-200">
+                    No doctors assigned
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {associatedDoctors.map((doctor, index) => (
+                      <div key={doctor._id || index} className="flex items-center justify-between p-2 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-100">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-gray-800 text-sm">{doctor.name}</p>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              doctor.assignmentType === 'direct' 
+                                ? 'bg-green-100 text-green-700 border border-green-200' 
+                                : 'bg-blue-100 text-blue-700 border border-blue-200'
+                            }`}>
+                              {doctor.assignmentType === 'direct' ? 'Primary' : 'Appointment'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600">{doctor.specialization || 'General'}</p>
+                        </div>
+                        {doctor.consultation_fee && (
+                          <div className="text-right">
+                            <p className="text-xs font-semibold text-gray-700">₹{doctor.consultation_fee}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Phone Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
@@ -178,21 +295,6 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
                   </p>
                 )}
               </div>
-
-              {/* Doctor Information */}
-              {userRole !== "doctor" && patient?.doctor_id && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Doctor</label>
-                  <p className="text-gray-800 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200 text-sm">
-                    {patient.doctor_id?.name || 'Not assigned'}
-                    {patient.doctor_id?.specialization && (
-                      <span className="text-blue-600 text-xs block">
-                        {patient.doctor_id.specialization}
-                      </span>
-                    )}
-                  </p>
-                </div>
-              )}
 
               {/* Description Field - Full Width */}
               <div className="sm:col-span-2">
@@ -247,9 +349,75 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
           </div>
         </div>
       </div>
+
+      {/* Recent Appointments Section - Below Profile */}
+      {/* Recent Appointments Section - Compact Design */}
+<div className="bg-white rounded-lg p-4 shadow-sm">
+  <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+    <svg className="w-4 h-4 mr-2 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+    Recent Appointments ({recentAppointments.length})
+  </h4>
+
+  {recentAppointments.length === 0 ? (
+    <div className="text-center py-3 text-gray-500 text-xs bg-gray-50 rounded-lg border border-gray-200">
+      No appointments found
+    </div>
+  ) : (
+    <div className="space-y-2">
+      {recentAppointments.map((apt) => (
+        <div key={apt._id} className="flex items-center justify-between p-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100 hover:border-green-200 transition-colors">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <h5 className="font-semibold text-gray-800 text-sm truncate">
+                Dr. {apt.doctor_id?.name || 'Unknown'}
+              </h5>
+              <span className={`text-xs px-2 py-0.5 rounded-full border flex-shrink-0 ${getStatusBadge(apt.status)}`}>
+                {apt.status}
+              </span>
+            </div>
+            <p className="text-xs text-gray-600 truncate">
+              {apt.doctor_id?.specialization || 'General'}
+            </p>
+            <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
+              <span className="flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {formatDate(apt.date)}
+              </span>
+              <span className="flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {formatTime(apt.time)}
+              </span>
+              {apt.rating && (
+                <span className="flex items-center gap-0.5">
+                  <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span className="text-gray-600">{apt.rating}</span>
+                </span>
+              )}
+            </div>
+          </div>
+          {apt.doctor_id?.consultation_fee && apt.status === 'completed' && (
+            <div className="text-right ml-2 flex-shrink-0">
+              <p className="text-xs font-semibold text-green-600">₹{apt.doctor_id.consultation_fee}</p>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+
     </div>
   );
 }
+
 
 export default function Patients() {
   const { user } = useContext(AuthContext);
@@ -302,7 +470,6 @@ export default function Patients() {
   // Filter patients based on user role
   const visiblePatients = user?.role === "doctor"
     ? patients.filter(patient => {
-        // Direct patient assignment (check by email)
         const patientDoctorEmail = patient.doctor_id?.email;
         const currentUserEmail = user.email;
         
@@ -310,7 +477,6 @@ export default function Patients() {
           return true;
         }
         
-        // Check if patient has any appointments with this doctor
         const hasAppointmentWithDoctor = appointments.some(appointment => {
           const appointmentDoctorEmail = appointment.doctor_id?.email;
           const appointmentPatientId = String(appointment.patient_id?._id || appointment.patient_id);
@@ -477,23 +643,18 @@ export default function Patients() {
               </div>
               {user?.role === "admin" && (
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-  <Link to="/addpatient" className="w-full sm:w-auto">
-    <button className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto">
-      Add Patient
-    </button>
-  </Link>
-  
-  <Link to="/patient-request" className="w-full sm:w-auto">
-    <button className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto">
-      Patient Requests
-    </button>
-  </Link>
-</div>
-                
-
-
-
-                
+                  <Link to="/addpatient" className="w-full sm:w-auto">
+                    <button className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto">
+                      Add Patient
+                    </button>
+                  </Link>
+                  
+                  <Link to="/patient-request" className="w-full sm:w-auto">
+                    <button className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto">
+                      Patient Requests
+                    </button>
+                  </Link>
+                </div>
               )}
             </div>
           </div>
@@ -616,6 +777,7 @@ export default function Patients() {
                     onClose={closePatientExpansion}
                     onSave={savePatientChanges}
                     userRole={user?.role}
+                    appointments={appointments}
                   />
                 </div>
               )}

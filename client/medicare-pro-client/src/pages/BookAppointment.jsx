@@ -33,6 +33,13 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
   const [calendarKey, setCalendarKey] = useState(0);
   const [patientId, setPatientId] = useState(null);
 
+  // AI Chat state
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [aiInput, setAiInput] = useState("");
+  const [aiReply, setAiReply] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+
   // Helper functions
   const isValidDate = (date) => {
     return date instanceof Date && !isNaN(date.getTime()) && date.getTime() > 0;
@@ -53,7 +60,6 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
       if (!user?.token || !user?.email) return;
 
       try {
-        // If patientData is passed as prop, use it
         if (patientData && patientData._id) {
           setPatientId(patientData._id);
           setFormData(prev => ({
@@ -63,7 +69,6 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
           return;
         }
 
-        // Otherwise, fetch patient by email
         const token = user.token || localStorage.getItem("token") || "";
         const response = await axios.get(
           `${BASE_URL}/api/patients/check-by-email/${encodeURIComponent(user.email)}`,
@@ -96,7 +101,6 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
     try {
       const token = user.token || localStorage.getItem("token") || "";
       
-      // Fetch only patient's appointments using patient_id
       const appointmentsRes = await axios.get(
         `${BASE_URL}/api/appointments/patient/${patientId}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -183,7 +187,6 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
 
         setDoctors(doctorsRes.data || []);
 
-        // Set default doctor
         if (Array.isArray(doctorsRes.data) && doctorsRes.data.length > 0 && !formData.doctor_id) {
           setFormData((prev) => ({ ...prev, doctor_id: doctorsRes.data[0]._id }));
         }
@@ -255,6 +258,15 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
       .calendar-container {
         min-height: 500px;
       }
+      .ai-loader {
+        border: 2px solid #e0e8ff;
+        border-top: 2px solid #0ea5e9;
+        border-radius: 50%;
+        width: 1em;
+        height: 1em;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin { 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} }
     `;
     document.head.appendChild(styleSheet);
 
@@ -270,6 +282,39 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // AI Chat handler - FIXED: Changed from form submission to button click
+  const handleAskAI = async (e) => {
+    e.preventDefault();
+    setAiLoading(true);
+    setAiError("");
+    setAiReply("");
+
+    try {
+      const specializationContext = `Available doctor specializations: ${doctors.map(d => d.specialization).join(', ')}. 
+      User question: ${aiInput}
+      
+      Please provide a brief, helpful recommendation about which medical specialization would be most appropriate for their health concern.`;
+
+      const res = await fetch(`${BASE_URL}/api/gemini-chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: specializationContext }),
+      });
+      
+      const data = await res.json();
+      if (data.reply) {
+        setAiReply(data.reply);
+      } else {
+        setAiError("No reply received from AI.");
+      }
+    } catch (err) {
+      console.error("AI Error:", err);
+      setAiError("Error connecting to AI. Please try again.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -277,7 +322,6 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
     setLoading(true);
 
     try {
-      // Ensure we have the patient ID
       const submitData = {
         ...formData,
         patient_id: patientId
@@ -304,7 +348,6 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
       setSuccess("Appointment booked successfully!");
       toast.success("Your appointment has been booked successfully!");
 
-      // Reset form
       setFormData({
         patient_id: patientId,
         doctor_id: doctors.length > 0 ? doctors[0]._id : "",
@@ -368,7 +411,7 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
         <div className="max-w-7xl mx-auto mt-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-            {/* Calendar Section - Patient's Appointments Only */}
+            {/* Calendar Section */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <div className="mb-4">
                 <h2 className="text-xl font-semibold mb-2">My Appointments Calendar</h2>
@@ -469,11 +512,102 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
                   <p className="text-sm text-gray-500 mt-1">This appointment will be booked for you</p>
                 </div>
 
-                {/* Doctor Field */}
+                {/* Doctor Field with Ask AI Button */}
                 <div>
-                  <label className="block mb-2 font-medium" htmlFor="doctor_id">
-                    Select Doctor *
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="font-medium" htmlFor="doctor_id">
+                      Select Doctor *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowAIChat(!showAIChat)}
+                      className="flex items-center gap-1 text-cyan-600 hover:text-cyan-700 text-sm font-medium"
+                    >
+                      ✨
+                      Ask AI
+                    </button>
+                  </div>
+
+                  {/* Inline AI Chat Box - FIXED: Removed nested form */}
+                  {showAIChat && (
+                    <div className="mb-4 p-4 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-lg border border-cyan-200 space-y-3">
+                      <div className="flex items-start gap-2">
+                        <svg className="w-5 h-5 text-cyan-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-cyan-900 mb-2">
+                            Describe your symptoms and I'll recommend the right specialist
+                          </p>
+                          <div className="space-y-2">
+                            <textarea
+                              value={aiInput}
+                              onChange={(e) => setAiInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && e.ctrlKey && !aiLoading && aiInput.trim()) {
+                                  handleAskAI(e);
+                                }
+                              }}
+                              placeholder="E.g., I have chest pain and shortness of breath..."
+                              className="w-full border border-cyan-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+                              rows="3"
+                              disabled={aiLoading}
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={handleAskAI}
+                                disabled={aiLoading || !aiInput.trim()}
+                                className="flex-1 bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-cyan-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
+                              >
+                                {aiLoading ? (
+                                  <>
+                                    <span className="ai-loader inline-block"></span>
+                                    Analyzing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                    Get Recommendation
+                                  </>
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowAIChat(false);
+                                  setAiInput("");
+                                  setAiReply("");
+                                  setAiError("");
+                                }}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                              >
+                                Close
+                              </button>
+                            </div>
+                          </div>
+
+                          {aiError && (
+                            <div className="mt-3 text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                              {aiError}
+                            </div>
+                          )}
+
+                          {aiReply && (
+                            <div className="mt-3 bg-white border border-cyan-200 rounded-lg px-4 py-3 shadow-sm">
+                              <p className="text-xs font-semibold text-cyan-700 mb-2">AI Recommendation:</p>
+                              <div className="text-sm text-gray-700 whitespace-pre-line">
+                                {aiReply}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <select
                     id="doctor_id"
                     name="doctor_id"
@@ -535,7 +669,7 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
                   {loading ? "Booking..." : "Book Appointment"}
                 </button>
 
-                {/* Recent Appointments - Patient's Own Only */}
+                {/* Recent Appointments */}
                 <div className="mt-4 border-t pt-4">
                   <h3 className="text-sm font-semibold mb-3 text-gray-700">Your Recent Appointments</h3>
                   <div className="space-y-2 max-h-32 overflow-y-auto">

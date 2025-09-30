@@ -55,28 +55,51 @@ export default function DoctorDashboard() {
       return days[date.getDay()];
     };
 
+    // **FIXED: Get current week dates with precise filtering**
     const getCurrentWeekDates = () => {
       const today = new Date();
-      const currentDay = today.getDay();
+      const currentDay = today.getDay(); // 0 = Sunday
+      
+      // Calculate start of week (Sunday) in local timezone
       const startOfWeek = new Date(today);
       startOfWeek.setDate(today.getDate() - currentDay);
+      startOfWeek.setHours(0, 0, 0, 0);
       
       const weekDates = [];
       for (let i = 0; i < 7; i++) {
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + i);
+        
+        // Format date as YYYY-MM-DD in local timezone to avoid UTC issues
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+        
+        const todayString = today.toISOString().split('T')[0];
+        
         weekDates.push({
-          date: date.toISOString().split('T')[0],
+          date: dateString,
           dayName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i],
-          fullDayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][i]
+          fullDayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][i],
+          isToday: dateString === todayString
         });
       }
+      
+      console.log("=== CURRENT WEEK DATES ===");
+      console.log("Today:", today.toISOString().split('T')[0]);
+      console.log("Week range:", weekDates[0].date, "to", weekDates[6].date);
+      console.log("Week dates:", weekDates.map(d => `${d.dayName}: ${d.date}`));
+      
       return weekDates;
     };
 
-    // Group appointments by day of week - Fixed earnings calculation
+    // **FIXED: Group appointments by day - ONLY current week with strict filtering**
     const groupAppointmentsByDay = () => {
       const weekDates = getCurrentWeekDates();
+      
+      // Create Set of current week dates for O(1) lookup
+      const currentWeekDatesSet = new Set(weekDates.map(d => d.date));
       
       const dayGroups = weekDates.reduce((groups, dayInfo) => {
         groups[dayInfo.dayName] = {
@@ -86,27 +109,55 @@ export default function DoctorDashboard() {
           earnings: 0,
           appointmentsList: [],
           date: dayInfo.date,
-          isToday: dayInfo.date === new Date().toISOString().split('T')[0]
+          isToday: dayInfo.isToday
         };
         return groups;
       }, {});
 
-      appointments.forEach(appointment => {
-        if (appointment.date) {
-          try {
-            const appointmentDate = appointment.date.includes('T') 
-              ? appointment.date.split('T')[0] 
-              : appointment.date;
-            
+      console.log("=== WEEKLY APPOINTMENT FILTERING ===");
+      console.log("Valid dates for this week:", Array.from(currentWeekDatesSet));
+
+      let includedCount = 0;
+      let excludedCount = 0;
+
+      appointments.forEach((appointment, index) => {
+        if (!appointment.date) {
+          console.log(`❌ EXCLUDED: No date - ${appointment.patient_id?.name || 'Unknown'}`);
+          excludedCount++;
+          return;
+        }
+
+        try {
+          // Extract date part from appointment date
+          let appointmentDate;
+          if (appointment.date.includes('T')) {
+            appointmentDate = appointment.date.split('T')[0];
+          } else if (appointment.date.includes('-') && appointment.date.length === 10) {
+            appointmentDate = appointment.date;
+          } else {
+            const dateObj = new Date(appointment.date);
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            appointmentDate = `${year}-${month}-${day}`;
+          }
+          
+          console.log(`Appointment ${index + 1}: Date = ${appointmentDate}, Patient = ${appointment.patient_id?.name || 'Unknown'}`);
+          
+          // **STRICT CURRENT WEEK CHECK: Only include appointments from this specific week**
+          if (currentWeekDatesSet.has(appointmentDate)) {
             const dayName = getDayName(appointmentDate);
             
+            console.log(`✅ INCLUDED: ${appointmentDate} (${dayName}) - ${appointment.patient_id?.name || 'Unknown'}`);
+            includedCount++;
+            
             if (dayGroups[dayName]) {
-              // Count all appointments (excluding deleted ones if they exist)
+              // Count all non-deleted appointments
               if (!appointment.isDeleted) {
                 dayGroups[dayName].appointments++;
               }
 
-              // Only add earnings for completed appointments, regardless of deletion status
+              // Only add earnings for completed appointments
               if (appointment.status === 'completed') {
                 dayGroups[dayName].earnings += doctor?.consultation_fee || 0;
               }
@@ -118,20 +169,42 @@ export default function DoctorDashboard() {
                   patientName: appointment.patient_id?.name || 'Unknown',
                   time: appointment.time,
                   status: appointment.status,
-                  rating: appointment.rating || 0
+                  rating: appointment.rating || 0,
+                  date: appointmentDate
                 });
               }
             }
-          } catch (err) {
-            console.warn('Error processing appointment date:', appointment.date, err);
+          } else {
+            console.log(`❌ EXCLUDED: ${appointmentDate} - NOT in current week (${appointment.patient_id?.name || 'Unknown'})`);
+            excludedCount++;
           }
+        } catch (err) {
+          console.warn('Error processing appointment date:', appointment.date, err);
+          excludedCount++;
         }
       });
 
-      return Object.values(dayGroups).sort((a, b) => {
+      console.log("=== FILTERING SUMMARY ===");
+      console.log(`Total appointments processed: ${appointments.length}`);
+      console.log(`Included in current week: ${includedCount}`);
+      console.log(`Excluded (other weeks/invalid): ${excludedCount}`);
+
+      const result = Object.values(dayGroups).sort((a, b) => {
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         return days.indexOf(a.day) - days.indexOf(b.day);
       });
+      
+      console.log("=== FINAL WEEKLY RESULT ===");
+      result.forEach(day => {
+        console.log(`${day.day} (${day.date}): ${day.appointments} appointments, ₹${day.earnings} earnings`);
+        if (day.appointments > 0) {
+          day.appointmentsList.forEach(apt => {
+            console.log(`  • ${apt.time} - ${apt.patientName} (${apt.status})`);
+          });
+        }
+      });
+      
+      return result;
     };
 
     // Generate monthly earnings data - Fixed to handle deleted appointments
@@ -290,10 +363,58 @@ export default function DoctorDashboard() {
           apt.doctor_id?._id === doctorProfile._id || apt.doctor_id === doctorProfile._id
         );
 
-        // Filter patients for this doctor
-        const doctorPatients = allPatients.filter(patient => 
+        // **NEW: Enhanced patient counting - both assigned AND appointment patients**
+        // 1. Get directly assigned patients
+        const directlyAssignedPatients = allPatients.filter(patient => 
           patient.doctor_id?._id === doctorProfile._id || patient.doctor_id === doctorProfile._id
         );
+
+        // 2. Get unique patients from appointments (who may not be directly assigned)
+        const appointmentPatientIds = new Set(
+          doctorAppointments
+            .filter(apt => apt.patient_id && !apt.isDeleted) // Only non-deleted appointments with patient_id
+            .map(apt => {
+              // Handle both object and string patient_id formats
+              if (typeof apt.patient_id === 'object') {
+                return apt.patient_id._id;
+              }
+              return apt.patient_id;
+            })
+        );
+
+        // 3. Get patient details from appointments
+        const appointmentPatients = allPatients.filter(patient => 
+          appointmentPatientIds.has(patient._id)
+        );
+
+        // 4. Combine and deduplicate patients
+        const allUniquePatientIds = new Set();
+        const combinedPatients = [];
+
+        // Add directly assigned patients
+        directlyAssignedPatients.forEach(patient => {
+          if (!allUniquePatientIds.has(patient._id)) {
+            allUniquePatientIds.add(patient._id);
+            combinedPatients.push({...patient, source: 'assigned'});
+          }
+        });
+
+        // Add appointment patients (if not already included)
+        appointmentPatients.forEach(patient => {
+          if (!allUniquePatientIds.has(patient._id)) {
+            allUniquePatientIds.add(patient._id);
+            combinedPatients.push({...patient, source: 'appointment'});
+          }
+        });
+
+        console.log("=== PATIENT COUNTING ===");
+        console.log("Directly assigned patients:", directlyAssignedPatients.length);
+        console.log("Unique appointment patient IDs:", appointmentPatientIds.size);
+        console.log("Total unique patients:", combinedPatients.length);
+        console.log("Combined patients breakdown:", {
+          assigned: combinedPatients.filter(p => p.source === 'assigned').length,
+          fromAppointments: combinedPatients.filter(p => p.source === 'appointment').length
+        });
 
         // Filter today's appointments for this doctor
         const doctorTodaysAppointments = todaysAppointments.filter(apt => 
@@ -301,7 +422,7 @@ export default function DoctorDashboard() {
         );
 
         setAppointmentsData(doctorAppointments);
-        setPatientsData(doctorPatients);
+        setPatientsData(combinedPatients); // **UPDATED: Use combined patient list**
 
         // FIXED: Calculate statistics excluding deleted appointments but preserving earnings
         const activeAppointments = doctorAppointments.filter(apt => !apt.isDeleted);
@@ -318,21 +439,19 @@ export default function DoctorDashboard() {
           : 0;
 
         // FIXED: Calculate total earnings from ALL completed appointments (including historical ones that might be deleted later)
-        // This ensures earnings don't decrease when appointments are deleted
         const allCompletedCount = doctorAppointments.filter(apt => apt.status === 'completed').length;
         const totalEarnings = allCompletedCount * (doctorProfile.consultation_fee || 0);
 
-
         const statsData = {
-  totalPatients: doctorPatients.length,
-  totalAppointments: activeAppointments.length,
-  scheduledAppointments: scheduledCount,
-  completedAppointments: completedCount,
-  cancelledAppointments: cancelledCount,
-  averageRating: parseFloat(averageRating),
-  totalEarnings: totalEarnings,
-  todaysAppointments: doctorTodaysAppointments.length, // ✅ FIXED: Correct variable name
-};
+          totalPatients: combinedPatients.length, // **UPDATED: Use combined count**
+          totalAppointments: activeAppointments.length,
+          scheduledAppointments: scheduledCount,
+          completedAppointments: completedCount,
+          cancelledAppointments: cancelledCount,
+          averageRating: parseFloat(averageRating),
+          totalEarnings: totalEarnings,
+          todaysAppointments: doctorTodaysAppointments.length,
+        };
 
         console.log("Doctor stats data:", statsData);
         console.log("Total appointments (active):", activeAppointments.length);
@@ -342,7 +461,7 @@ export default function DoctorDashboard() {
         setStats(statsData);
         
         // Process chart data with active appointments only
-        const charts = processDoctorData(activeAppointments, doctorPatients, doctorProfile);
+        const charts = processDoctorData(activeAppointments, combinedPatients, doctorProfile);
         console.log("Generated doctor charts:", charts);
         setChartData(charts);
         
@@ -476,7 +595,7 @@ export default function DoctorDashboard() {
           <div className="col-span-1 rounded-xl bg-[#e6f3ff] p-6 shadow flex flex-col items-start">
             <span className="uppercase text-xs text-gray-500 font-semibold mb-1">My Patients</span>
             <span className="text-3xl font-bold text-gray-800">{stats.totalPatients}</span>
-            <span className="text-green-500 font-medium text-xs mt-2">Active</span>
+            <span className="text-green-500 font-medium text-xs mt-2">All Patients</span>
           </div>
           
           <div className="col-span-1 rounded-xl bg-[#e6f3ff] p-6 shadow flex flex-col items-start">
@@ -485,19 +604,19 @@ export default function DoctorDashboard() {
             <span className="text-blue-500 font-medium text-xs mt-2">All Time</span>
           </div>
 
-          <div className="col-span-1 rounded-xl bg-[#e6f3ff] p-6 shadow flex flex-col items-start">
+          <div className="col-span-1 rounded-xl bg-[#e5f8f8] p-6 shadow flex flex-col items-start">
             <span className="uppercase text-xs text-gray-500 font-semibold mb-1">Scheduled</span>
             <span className="text-3xl font-bold text-gray-800">{stats.scheduledAppointments}</span>
             <span className="text-orange-500 font-medium text-xs mt-2">Upcoming</span>
           </div>
 
-          <div className="col-span-1 rounded-xl bg-[#e6f3ff] p-6 shadow flex flex-col items-start">
+          <div className="col-span-1 rounded-xl bg-[#edf5ff] p-6 shadow flex flex-col items-start">
             <span className="uppercase text-xs text-gray-500 font-semibold mb-1">Completed</span>
             <span className="text-3xl font-bold text-gray-800">{stats.completedAppointments}</span>
             <span className="text-green-500 font-medium text-xs mt-2">Success</span>
           </div>
 
-          <div className="col-span-1 rounded-xl bg-[#e6f3ff] p-6 shadow flex flex-col items-start">
+          <div className="col-span-1 rounded-xl bg-[#eef6fc] p-6 shadow flex flex-col items-start">
             <span className="uppercase text-xs text-gray-500 font-semibold mb-1">Cancelled</span>
             <span className="text-3xl font-bold text-gray-800">{stats.cancelledAppointments}</span>
             <span className="text-red-500 font-medium text-xs mt-2">Missed</span>
@@ -581,12 +700,12 @@ export default function DoctorDashboard() {
                 </p>
               </div>
 
-              {/* Weekly Appointments */}
+              {/* **FIXED: Weekly Appointments - Current Week Only** */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold text-gray-800">📅 This Week</h3>
                   <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                    Live Data
+                    Current Week Only
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
@@ -599,7 +718,7 @@ export default function DoctorDashboard() {
                   </BarChart>
                 </ResponsiveContainer>
                 <p className="text-xs text-gray-500 mt-2">
-                  Weekly appointment schedule and earnings
+                  Weekly appointment schedule and earnings (Current week only - Sep 29 to Oct 5, 2025)
                 </p>
               </div>
 

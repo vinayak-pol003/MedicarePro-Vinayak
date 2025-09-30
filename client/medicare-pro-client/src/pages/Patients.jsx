@@ -25,43 +25,6 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
     }
   }, [patient]);
 
-  // Helper function to get all unique assigned doctors
-  const getAllAssignedDoctors = () => {
-    if (!patient) return [];
-    
-    const doctors = [];
-    
-    // Add direct doctor if exists
-    if (patient.directDoctor) {
-      doctors.push({
-        ...patient.directDoctor,
-        assignmentType: 'Direct Assignment'
-      });
-    }
-    
-    // Add appointment doctors (avoiding duplicates)
-    if (patient.appointmentDoctors && patient.appointmentDoctors.length > 0) {
-      patient.appointmentDoctors.forEach(doc => {
-        // Check if this doctor is already added as direct doctor
-        const isAlreadyAdded = doctors.some(d => d._id === doc._id);
-        if (!isAlreadyAdded) {
-          doctors.push({
-            ...doc,
-            assignmentType: 'Appointment Doctor'
-          });
-        } else {
-          // Update the existing doctor to show both assignment types
-          const existingDoc = doctors.find(d => d._id === doc._id);
-          if (existingDoc) {
-            existingDoc.assignmentType = 'Direct Assignment & Appointments';
-          }
-        }
-      });
-    }
-    
-    return doctors;
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -186,12 +149,9 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
                 )}
               </div>
 
-              {/* Email Field - Always Read-only */}
+              {/* Email Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                  <span className="text-xs text-gray-500 ml-1">(read-only)</span>
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <p className="text-gray-800 bg-gray-100 px-3 py-2 rounded-lg text-sm border border-gray-200">
                   {patient?.email || 'Not provided'}
                 </p>
@@ -215,53 +175,20 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
                 )}
               </div>
 
-              {/* UPDATED: All Assigned Doctors Section */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Assigned Doctors ({getAllAssignedDoctors().length})
-                </label>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-h-40 overflow-y-auto">
-                  {getAllAssignedDoctors().length === 0 ? (
-                    <p className="text-gray-500 text-sm">No doctors assigned</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {getAllAssignedDoctors().map((doctor, index) => (
-                        <div key={doctor._id} className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
-                          <div className="flex items-center gap-3">
-                            {doctor.image ? (
-                              <img
-                                src={doctor.image}
-                                alt={doctor.name}
-                                className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                <span className="text-blue-600 text-xs">👨‍⚕️</span>
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 text-sm truncate">
-                                Dr. {doctor.name}
-                              </p>
-                              <p className="text-blue-600 text-xs">
-                                {doctor.specialization || doctor.specialty || 'General'}
-                              </p>
-                              <p className="text-gray-500 text-xs">
-                                {doctor.assignmentType}
-                              </p>
-                              {doctor.email && (
-                                <p className="text-gray-400 text-xs truncate">
-                                  {doctor.email}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+              {/* Doctor Information */}
+              {userRole !== "doctor" && patient?.doctor_id && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Doctor</label>
+                  <p className="text-gray-800 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200 text-sm">
+                    {patient.doctor_id?.name || 'Not assigned'}
+                    {patient.doctor_id?.specialization && (
+                      <span className="text-blue-600 text-xs block">
+                        {patient.doctor_id.specialization}
+                      </span>
+                    )}
+                  </p>
                 </div>
-              </div>
+              )}
 
               {/* Description Field - Full Width */}
               <div className="sm:col-span-2">
@@ -283,7 +210,7 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
               </div>
             </div>
 
-            {/* Action Buttons - Only show edit functionality to admins */}
+            {/* Action Buttons */}
             <div className="flex justify-end mt-6 gap-3">
               {editMode ? (
                 <>
@@ -303,7 +230,6 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
                   </button>
                 </>
               ) : (
-                // Only show edit button to admins
                 userRole === "admin" && (
                   <button
                     onClick={handleEdit}
@@ -317,52 +243,6 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
           </div>
         </div>
       </div>
-
-      {/* Optional: Appointment History Section */}
-      {patient?.appointmentHistory && patient.appointmentHistory.length > 0 && (
-        <div className="mt-6 bg-white rounded-lg p-4 shadow-sm">
-          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-            <span className="mr-2">📅</span>
-            Recent Appointments ({patient.appointmentHistory.length})
-          </h4>
-          <div className="space-y-2 max-h-40 overflow-y-auto">
-            {patient.appointmentHistory.slice(0, 5).map((apt, index) => (
-              <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg text-sm">
-                <div className="flex items-center gap-3">
-                  {apt.doctor.image ? (
-                    <img
-                      src={apt.doctor.image}
-                      alt={apt.doctor.name}
-                      className="w-6 h-6 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 text-xs">👨‍⚕️</span>
-                    </div>
-                  )}
-                  <div>
-                    <span className="font-medium">Dr. {apt.doctor.name}</span>
-                    <span className="text-gray-500 ml-2">({apt.doctor.specialization || apt.doctor.specialty || 'General'})</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-gray-600">
-                    {new Date(apt.date).toLocaleDateString()} at {apt.time}
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    apt.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    apt.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
-                    apt.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {apt.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -370,6 +250,7 @@ function PatientProfileExpansion({ patient, onClose, onSave, loading, error, use
 export default function Patients() {
   const { user } = useContext(AuthContext);
   const [patients, setPatients] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -381,30 +262,64 @@ export default function Patients() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchPatients = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
           navigate("/login");
           return;
         }
-        const res = await axios.get("http://localhost:5000/api/patients", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log("Patients received:", res.data); // Debug log
-        setPatients(Array.isArray(res.data) ? res.data : []);
+
+        const [patientsRes, appointmentsRes] = await Promise.all([
+          axios.get("http://localhost:5000/api/patients", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get("http://localhost:5000/api/appointments", {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        ]);
+
+        setPatients(Array.isArray(patientsRes.data) ? patientsRes.data : []);
+        setAppointments(Array.isArray(appointmentsRes.data) ? appointmentsRes.data : []);
       } catch (err) {
-        console.error("Error fetching patients:", err);
-        setError("Failed to load patients.");
+        console.error("Error fetching data:", err);
+        setError("Failed to load data.");
         if (err.response?.status === 401) navigate("/login");
       } finally {
         setLoading(false);
       }
     };
-    fetchPatients();
-  }, [navigate]);
 
-  // Enhanced fetch patient details with better error handling
+    if (user) {
+      fetchData();
+    }
+  }, [navigate, user]);
+
+  // Filter patients based on user role
+  const visiblePatients = user?.role === "doctor"
+    ? patients.filter(patient => {
+        // Direct patient assignment (check by email)
+        const patientDoctorEmail = patient.doctor_id?.email;
+        const currentUserEmail = user.email;
+        
+        if (patientDoctorEmail === currentUserEmail) {
+          return true;
+        }
+        
+        // Check if patient has any appointments with this doctor
+        const hasAppointmentWithDoctor = appointments.some(appointment => {
+          const appointmentDoctorEmail = appointment.doctor_id?.email;
+          const appointmentPatientId = String(appointment.patient_id?._id || appointment.patient_id);
+          const currentPatientId = String(patient._id);
+          
+          return appointmentDoctorEmail === currentUserEmail && 
+                 appointmentPatientId === currentPatientId;
+        });
+        
+        return hasAppointmentWithDoctor;
+      })
+    : patients;
+
   const fetchPatientDetail = async (patientId) => {
     try {
       if (expandedPatientId === patientId) {
@@ -423,12 +338,10 @@ export default function Patients() {
         headers: { Authorization: `Bearer ${token}` },
       });
       
-      console.log("Patient data received:", res.data);
       setSelectedPatient(res.data);
     } catch (err) {
       console.error("Error fetching patient details:", err);
       
-      // Enhanced error handling
       if (err.response?.status === 403) {
         setPatientError("Access denied. You don't have permission to view this patient's details.");
       } else if (err.response?.status === 404) {
@@ -441,7 +354,6 @@ export default function Patients() {
     }
   };
 
-  // Save patient changes
   const savePatientChanges = async (patientId, updatedData) => {
     try {
       const token = localStorage.getItem("token");
@@ -472,10 +384,6 @@ export default function Patients() {
     setPatientError("");
   };
 
-  // REMOVED: Doctor role filtering is now handled on backend
-  // All patients returned from API are already filtered by backend
-  const visiblePatients = patients;
-
   const handleDelete = async (id) => {
     const patient = patients.find(p => p._id === id);
     const patientName = patient?.name || "this patient";
@@ -486,11 +394,7 @@ export default function Patients() {
     try {
       const token = localStorage.getItem("token");
       
-      const appointmentsRes = await axios.get("http://localhost:5000/api/appointments", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      const patientAppointments = appointmentsRes.data.filter(
+      const patientAppointments = appointments.filter(
         appointment => String(appointment.patient_id?._id || appointment.patient_id) === String(id)
       );
       
@@ -507,6 +411,7 @@ export default function Patients() {
       });
       
       setPatients((prev) => prev.filter((p) => p._id !== id));
+      setAppointments((prev) => prev.filter((apt) => String(apt.patient_id?._id || apt.patient_id) !== String(id)));
       
       if (expandedPatientId === id) {
         closePatientExpansion();
@@ -557,9 +462,14 @@ export default function Patients() {
                 </h1>
                 <p className="text-gray-600 text-sm sm:text-base">
                   {user?.role === "doctor" 
-                    ? "Patients assigned to you and with appointments" 
+                    ? "Patients directly assigned to you and those with appointments" 
                     : "Manage and track all patients"}
                 </p>
+                {user?.role === "doctor" && (
+                  <p className="text-gray-500 text-xs mt-1">
+                    Showing {visiblePatients.length} patient(s)
+                  </p>
+                )}
               </div>
               {user?.role === "admin" && (
                 <Link to="/addpatient" className="w-full sm:w-auto mt-2 sm:mt-0">
@@ -604,22 +514,31 @@ export default function Patients() {
           </div>
         </div>
 
+        {/* No Patients Message */}
+        {filteredPatients.length === 0 && (
+          <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+            <div className="text-gray-400 text-lg mb-2">👥</div>
+            <h3 className="text-lg font-medium text-gray-600 mb-2">
+              No Patients Found
+            </h3>
+            <p className="text-gray-500 text-sm max-w-md mx-auto">
+              {user?.role === "doctor" 
+                ? filter || statusFilter 
+                  ? "Try adjusting your search criteria."
+                  : "You have no patients assigned to you or with appointments yet."
+                : filter || statusFilter
+                  ? "Try adjusting your search criteria."
+                  : "No patients have been added to the system yet."}
+            </p>
+          </div>
+        )}
+
         {/* Patient Cards */}
         <div className="space-y-3">
-          {filteredPatients.length === 0 && (
-            <div className="text-gray-400 text-center py-6">
-              {user?.role === "doctor" 
-                ? `No patients found. ${filter || statusFilter ? "Try adjusting your search criteria." : "You have no patients assigned or appointments scheduled."}`
-                : "No patients found."}
-            </div>
-          )}
-          
           {filteredPatients.map((p) => (
             <Fragment key={p._id}>
-              {/* Patient Card with enhanced indicators */}
               <div className="bg-white border border-gray-200 rounded-lg p-4 hover:border-cyan-300 hover:shadow-md transition-all">
                 <div className="flex items-center gap-4">
-                  {/* Patient Image */}
                   <div className="w-16 h-16 bg-gray-100 border border-gray-200 overflow-hidden rounded-lg">
                     {p.image ? (
                       <img
@@ -634,26 +553,8 @@ export default function Patients() {
                     )}
                   </div>
 
-                  {/* Patient Info with relationship indicators */}
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900 text-lg">{p.name}</h3>
-                      {/* Enhanced indicators for doctors */}
-                      {user?.role === "doctor" && (
-                        <div className="flex gap-1">
-                          {p.doctor_id?.email === user?.email && (
-                            <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium">
-                              Direct Patient
-                            </span>
-                          )}
-                          {p.hasAppointments && (
-                            <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">
-                              Has Appointments
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <h3 className="font-semibold text-gray-900 text-lg">{p.name}</h3>
                     <p className="text-gray-600 text-sm">{p.email || "No email"}</p>
                     <p className="text-gray-600 text-sm">{p.phone || "No phone"}</p>
                     {user?.role !== "doctor" && (
@@ -666,7 +567,6 @@ export default function Patients() {
                     )}
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="flex gap-2">
                     <button
                       onClick={() => fetchPatientDetail(p._id)}
@@ -690,7 +590,6 @@ export default function Patients() {
                 </div>
               </div>
 
-              {/* Expanded Patient Profile */}
               {expandedPatientId === p._id && (
                 <div className="ml-4 mr-4 mb-2">
                   <PatientProfileExpansion

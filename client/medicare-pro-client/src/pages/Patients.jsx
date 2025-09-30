@@ -476,11 +476,24 @@ export default function Patients() {
                 )}
               </div>
               {user?.role === "admin" && (
-                <Link to="/addpatient" className="w-full sm:w-auto mt-2 sm:mt-0">
-                  <button className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto">
-                    Add Patient
-                  </button>
-                </Link>
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+  <Link to="/addpatient" className="w-full sm:w-auto">
+    <button className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto">
+      Add Patient
+    </button>
+  </Link>
+  
+  <Link to="/patient-request" className="w-full sm:w-auto">
+    <button className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto">
+      Patient Requests
+    </button>
+  </Link>
+</div>
+                
+
+
+
+                
               )}
             </div>
           </div>

@@ -5,7 +5,7 @@ const patientSchema = new mongoose.Schema({
   email: { type: String },
   phone: { type: String },
   description: { type: String },
-  image: { type: String }, // URL or path to patient image
+  image: { type: String}, // URL or path to patient image
   doctor_id: { type: mongoose.Schema.Types.ObjectId, ref: "Doctor" },
 }, { timestamps: true });
 

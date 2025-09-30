@@ -12,6 +12,7 @@ import Appointment from "../models/Appointment.js";
 import { authMiddleware, roleCheck } from "../middleware/auth.js";
 import { io } from "../index.js";
 import Prescription from "../models/Prescription.js";
+import PatientRequest from "../models/PatientRequest.js";
 
 
 dotenv.config();
@@ -123,7 +124,7 @@ router.get("/profile", authMiddleware, async (req, res) => {
 });
 // ------------------- PATIENTS -------------------
 // Get all patients (admin & doctor only)
-router.get("/patients", authMiddleware, roleCheck(["admin", "doctor"]), async (req, res) => {
+router.get("/patients", authMiddleware, roleCheck(["admin", "doctor","patient"]), async (req, res) => {
   try {
     const patients = await Patient.find().populate("doctor_id", "name email specialization");
     res.json(patients);
@@ -239,6 +240,187 @@ router.put("/profile", authMiddleware, async (req, res) => {
 //     }
 //   }
 // );
+// ------------------- PATIENT REQUESTS -------------------
+
+// Get user's request status (for patients)
+router.get("/patient-requests/my-status", authMiddleware, roleCheck(["patient"]), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    console.log("Checking patient request status for user:", userId);
+    
+    const request = await PatientRequest.findOne({ user_id: userId });
+    
+    console.log("Found request:", request ? "YES" : "NO");
+    
+    res.json({
+      hasRequest: !!request,
+      status: request?.status || null,
+      request: request || null
+    });
+  } catch (error) {
+    console.error("Error checking request status:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Submit patient registration request
+router.post("/patient-requests", authMiddleware, roleCheck(["patient"]), async (req, res) => {
+  try {
+    const { name, email, phone, description, image, doctor_id } = req.body;
+    const user_id = req.user.id;
+
+    console.log("Creating patient request for user:", user_id);
+    console.log("Request data:", { name, email, phone, doctor_id });
+
+    // Check if user already has pending request
+    const existingRequest = await PatientRequest.findOne({
+      user_id,
+      status: { $in: ["pending", "approved"] }
+    });
+
+    if (existingRequest) {
+      console.log("User already has existing request:", existingRequest.status);
+      return res.status(400).json({ 
+        message: `You already have a ${existingRequest.status} patient registration request` 
+      });
+    }
+
+    // Validate required fields
+    if (!name || !doctor_id || !phone) {
+      return res.status(400).json({
+        message: "Name, phone, and doctor selection are required"
+      });
+    }
+
+    // Validate doctor exists
+    if (!mongoose.Types.ObjectId.isValid(doctor_id)) {
+      return res.status(400).json({ message: "Invalid doctor ID format" });
+    }
+
+    const doctor = await Doctor.findById(doctor_id);
+    if (!doctor) {
+      return res.status(400).json({ message: "Selected doctor not found" });
+    }
+
+    const patientRequest = new PatientRequest({
+      user_id,
+      name: name.trim(),
+      email: email?.trim() || req.user.email,
+      phone: phone.trim(),
+      description: description?.trim(),
+      image,
+      doctor_id
+    });
+
+    await patientRequest.save();
+
+    console.log("Patient request created successfully:", patientRequest._id);
+
+    res.status(201).json({
+      message: "Patient registration request submitted successfully. Awaiting admin approval.",
+      request: patientRequest
+    });
+  } catch (error) {
+    console.error("Error creating patient request:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all patient requests (admin only)
+router.get("/patient-requests", authMiddleware, roleCheck(["admin"]), async (req, res) => {
+  try {
+    const requests = await PatientRequest.find()
+      .populate("user_id", "name email")
+      .populate("doctor_id", "name specialization")
+      .sort({ createdAt: -1 });
+
+    res.json(requests);
+  } catch (error) {
+    console.error("Error fetching patient requests:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Approve patient request (admin only)
+router.patch("/patient-requests/:requestId/approve", authMiddleware, roleCheck(["admin"]), async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const adminId = req.user.id;
+
+    const request = await PatientRequest.findById(requestId);
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    if (request.status !== "pending") {
+      return res.status(400).json({ message: "Request already processed" });
+    }
+
+    // Create Patient record
+    const patient = new Patient({
+      name: request.name,
+      email: request.email,
+      phone: request.phone,
+      description: request.description,
+      image: request.image,
+      doctor_id: request.doctor_id
+    });
+
+    const savedPatient = await patient.save();
+
+    // Update request status
+    request.status = "approved";
+    request.processed_by = adminId;
+    request.patient_id = savedPatient._id;
+    await request.save();
+
+    console.log("Patient request approved. Patient created:", savedPatient._id);
+
+    res.json({
+      message: "Patient request approved successfully",
+      patient: savedPatient
+    });
+  } catch (error) {
+    console.error("Error approving patient request:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reject patient request (admin only)
+router.patch("/patient-requests/:requestId/reject", authMiddleware, roleCheck(["admin"]), async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { reason } = req.body;
+    const adminId = req.user.id;
+
+    const request = await PatientRequest.findById(requestId);
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    if (request.status !== "pending") {
+      return res.status(400).json({ message: "Request already processed" });
+    }
+
+    request.status = "rejected";
+    request.processed_by = adminId;
+    request.rejection_reason = reason || "No reason provided";
+    await request.save();
+
+    console.log("Patient request rejected:", requestId);
+
+    res.json({
+      message: "Patient request rejected",
+      reason: request.rejection_reason
+    });
+  } catch (error) {
+    console.error("Error rejecting patient request:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 
 router.post(
   "/patients",
@@ -346,6 +528,66 @@ router.put("/patients/:id", authMiddleware, roleCheck(["admin", "doctor"]), asyn
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+
+
+// routes/patientRoutes.js - Add this endpoint
+router.get("/patients/check-user/:userId", authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const patient = await Patient.exists({ _id: userId });
+    
+    res.json({ 
+      exists: !!patient,
+      patient: patient ? await Patient.findById(userId) : null 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// routes/patientRequestRoutes.js - Add this endpoint  
+router.get("/patients/my-status", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const request = await PatientRequest.findOne({ user_id: userId });
+    
+    res.json({
+      hasRequest: !!request,
+      status: request?.status || null,
+      request: request || null
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add this route AFTER your existing patient routes
+router.get("/patients/check-by-email/:email", authMiddleware, roleCheck(["patient", "admin", "doctor"]), async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    // Find patient by email (case-insensitive)
+    const patient = await Patient.findOne({ 
+      email: { $regex: new RegExp(`^${email}$`, 'i') }
+    });
+    
+    res.json({ 
+      exists: !!patient,
+      patient: patient ? {
+        _id: patient._id,
+        name: patient.name,
+        email: patient.email,
+        doctor_id: patient.doctor_id
+      } : null 
+    });
+  } catch (error) {
+    console.error("Error checking patient by email:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 
 // View single patient (optional, for 'view details' page)
@@ -524,6 +766,8 @@ router.get(
 );
 
 
+// -----------------------------------------------------------------------------------------------------user status------
+
 
 // ------------------- APPOINTMENTS -------------------
 // Get all appointments (admin & doctor only)
@@ -649,6 +893,36 @@ router.get(
       }
     }
   );
+
+  // Add this route in the APPOINTMENTS section
+router.get("/appointments/patient/:patientId", authMiddleware, roleCheck(["patient", "admin", "doctor"]), async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    
+    // Validate patient ID format
+    if (!mongoose.Types.ObjectId.isValid(patientId)) {
+      return res.status(400).json({ message: "Invalid patient ID format" });
+    }
+    
+    // For security: ensure patients can only access their own appointments
+    if (req.user.role === "patient") {
+      const patient = await Patient.findOne({ email: req.user.email });
+      if (!patient || patient._id.toString() !== patientId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+    }
+    
+    const appointments = await Appointment.find({ patient_id: patientId })
+      .populate("doctor_id", "name email specialization")
+      .populate("prescription")
+      .sort({ date: -1, time: -1 });
+    
+    res.json(appointments);
+  } catch (error) {
+    console.error("Error fetching patient appointments:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 
 

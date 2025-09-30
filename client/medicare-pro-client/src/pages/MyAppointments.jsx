@@ -5,7 +5,7 @@ import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade.jsx";
 import toast from "react-hot-toast";
 
-
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 // Interactive Star rating component - UPDATED with completion and one-time restrictions
 const RatingStars = ({ rating = 0, appointmentId, onRatingUpdate, disabled = false, status, hasExistingRating = false }) => {
@@ -146,26 +146,6 @@ const RatingStars = ({ rating = 0, appointmentId, onRatingUpdate, disabled = fal
   );
 };
 
-function formatTimeToIST(timeStr) {
-  if (!timeStr) return "";
-  const [h, m] = timeStr.split(":");
-  let hour = parseInt(h, 10);
-  let ampm = "AM";
-  if (hour >= 12) {
-    ampm = "PM";
-    if (hour > 12) hour -= 12;
-  } else if (hour === 0) {
-    hour = 12;
-  }
-  return `${hour}:${m} ${ampm} IST`;
-}
-
-function shortDate(dateStr) {
-  if (!dateStr) return "";
-  const datePart = dateStr.split("T")[0];
-  return datePart;
-}
-
 // Inline Doctor Details Component
 function DoctorDetailsCard({ doctor, loading, error, onClose }) {
   return (
@@ -252,6 +232,26 @@ function DoctorDetailsCard({ doctor, loading, error, onClose }) {
   );
 }
 
+function formatTimeToIST(timeStr) {
+  if (!timeStr) return "";
+  const [h, m] = timeStr.split(":");
+  let hour = parseInt(h, 10);
+  let ampm = "AM";
+  if (hour >= 12) {
+    ampm = "PM";
+    if (hour > 12) hour -= 12;
+  } else if (hour === 0) {
+    hour = 12;
+  }
+  return `${hour}:${m} ${ampm} IST`;
+}
+
+function shortDate(dateStr) {
+  if (!dateStr) return "";
+  const datePart = dateStr.split("T")[0];
+  return datePart;
+}
+
 const MyAppointments = () => {
   const { user } = useContext(AuthContext);
   const [appointments, setAppointments] = useState([]);
@@ -263,6 +263,41 @@ const MyAppointments = () => {
   const [expandedRow, setExpandedRow] = useState(null);
   const [doctorLoading, setDoctorLoading] = useState(false);
   const [doctorError, setDoctorError] = useState("");
+  const [isPatient, setIsPatient] = useState(false);
+  const [checkingPatientStatus, setCheckingPatientStatus] = useState(true);
+
+  // Check if user is a registered patient
+  const checkPatientStatus = async () => {
+    if (!user?.token || !user?.email) {
+      setCheckingPatientStatus(false);
+      return;
+    }
+
+    try {
+      const token = user.token || localStorage.getItem("token") || "";
+      
+      // Try to fetch all patients and check if user email matches
+      const patientsResponse = await API.get("/patients", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const matchingPatient = patientsResponse.data.find(
+        patient => patient.email && 
+        patient.email.toLowerCase().trim() === user.email.toLowerCase().trim()
+      );
+
+      console.log("Patient check - User email:", user.email);
+      console.log("Patient check - Matching patient:", matchingPatient ? "Found" : "Not found");
+
+      setIsPatient(!!matchingPatient);
+    } catch (err) {
+      console.error("Error checking patient status:", err);
+      // If check fails, default to false
+      setIsPatient(false);
+    } finally {
+      setCheckingPatientStatus(false);
+    }
+  };
 
   const fetchAppointments = async () => {
     try {
@@ -293,6 +328,7 @@ const MyAppointments = () => {
   };
 
   useEffect(() => {
+    checkPatientStatus();
     fetchAppointments();
   }, []);
 
@@ -300,6 +336,7 @@ const MyAppointments = () => {
   const handleRefresh = () => {
     console.log("Manual refresh triggered");
     fetchAppointments();
+    checkPatientStatus();
   };
 
   // Handle rating updates with validation
@@ -372,14 +409,52 @@ const MyAppointments = () => {
             <div className="flex flex-col sm:flex-row justify-between items-center">
               <div>
                 <h1 className="text-xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
-                 My Appointments
+                  My Appointments
                 </h1>
                 <p className="text-gray-600 text-sm sm:text-base">
                   Track all your appointments and rate completed ones
                 </p>
               </div>
+              
+              {/* Conditionally show button based on patient status */}
+              {user?.role === "patient" && !checkingPatientStatus && (
+                isPatient ? (
+                  <Link
+                    to="/book-appointment"
+                    className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto mt-2 sm:mt-0 text-center block"
+                  >
+                    Book Appointment
+                  </Link>
+                ) : (
+                  <Link
+                    to="/patients-form"
+                    className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto mt-2 sm:mt-0 text-center block"
+                  >
+                    Register as Patient
+                  </Link>
+                )
+              )}
+
+              {/* For admin and doctor, always show Book Appointment */}
+              {["admin", "doctor"].includes(user?.role) && (
+                <Link
+                  to="/patient-check"
+                  className="bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors w-full sm:w-auto mt-2 sm:mt-0 text-center block"
+                >
+                  Book Appointment
+                </Link>
+              )}
+
+              {/* Loading state for patient check */}
+              {checkingPatientStatus && user?.role === "patient" && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-cyan-600"></div>
+                  Checking status...
+                </div>
+              )}
             </div>
           </div>
+          
           {/* Filters */}
           <div className="bg-cyan-500 rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
             <div className="flex flex-col md:flex-row gap-4">

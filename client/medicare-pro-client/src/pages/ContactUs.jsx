@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
-import axios from "axios"; // Add this import
-import toast from "react-hot-toast"; // Add this import
+import { useNavigate } from "react-router-dom"; // Add this import
+import axios from "axios";
+import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from "react-icons/fa";
@@ -12,6 +13,7 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ContactUs = () => {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate(); // Initialize navigate hook
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
 
@@ -32,6 +34,13 @@ const ContactUs = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check if user is logged in before submitting
+    if (!user) {
+      toast.error('Please sign in to send a message');
+      navigate('/signin');
+      return;
+    }
     
     try {
       const response = await axios.post(`${BASE_URL}/api/contact`, {
@@ -93,14 +102,31 @@ const ContactUs = () => {
                 Contact Us
               </h2>
               <p className="text-center text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">
-                We're here to answer your questions. Reach out to us using the form below or contact details.
+                {!user 
+                  ? "Please sign in to send us a message. We're here to help you with all your healthcare needs!" 
+                  : "We're here to answer your questions. Reach out to us using the form below or contact details."
+                }
               </p>
+              
+              {/* Show login prompt if user is not logged in */}
+              {!user && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                  <p className="text-blue-800 mb-3">You need to be signed in to contact us.</p>
+                  <button
+                    onClick={() => navigate('/signin')}
+                    className="bg-cyan-600 text-white py-2 px-6 rounded font-semibold hover:bg-cyan-700 transition"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              )}
+
               <div className="flex flex-col gap-8 sm:gap-10 md:flex-row">
                 {/* Contact Details */}
                 <div className="md:w-1/2 flex flex-col gap-6">
                   <div>
                     <span className="font-semibold text-gray-800">Address:</span>
-                    <p className="text-gray-600 text-sm sm:text-base">123 Main Street, Mumbai, IN 400001</p>
+                    <p className="text-gray-600 text-sm sm:text-base">123 Main Street, Bengaluru, IN 400001</p>
                   </div>
                   <div>
                     <span className="font-semibold text-gray-800">Email:</span>
@@ -112,56 +138,54 @@ const ContactUs = () => {
                   </div>
                 </div>
                 
-                {/* Contact Form */}
-                <form className="md:w-1/2 flex flex-col gap-4" onSubmit={handleSubmit}>
-                  <label className="font-medium text-gray-700 text-sm sm:text-base">
-                    Name
-                    <input
-                      type="text"
-                      name="name"
-                      value={form.name}
-                      onChange={handleChange}
-                      disabled={!!user} // Disable if user is logged in
-                      required
-                      className={`w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-200 text-sm sm:text-base ${
-                        user ? 'bg-gray-100 cursor-not-allowed' : ''
-                      }`}
-                    />
-                  </label>
-                  <label className="font-medium text-gray-700 text-sm sm:text-base">
-                    Email
-                    <input
-                      type="email"
-                      name="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      disabled={!!user} // Disable if user is logged in
-                      required
-                      className={`w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-200 text-sm sm:text-base ${
-                        user ? 'bg-gray-100 cursor-not-allowed' : ''
-                      }`}
-                    />
-                  </label>
-                  <label className="font-medium text-gray-700 text-sm sm:text-base">
-                    Message
-                    <textarea
-                      name="message"
-                      rows="4"
-                      value={form.message}
-                      onChange={handleChange}
-                      placeholder="Please describe your inquiry in detail..."
-                      required
-                      className="w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-200 text-sm sm:text-base"
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    className="bg-cyan-600 text-white py-2 px-4 sm:px-6 rounded font-semibold hover:bg-cyan-700 transition text-sm sm:text-base disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    disabled={submitted}
-                  >
-                    {submitted ? "Thank You!" : "Send Message"}
-                  </button>
-                </form>
+                {/* Contact Form - Only show if user is logged in */}
+                {user && (
+                  <form className="md:w-1/2 flex flex-col gap-4" onSubmit={handleSubmit}>
+                    <label className="font-medium text-gray-700 text-sm sm:text-base">
+                      Name
+                      <input
+                        type="text"
+                        name="name"
+                        value={form.name}
+                        onChange={handleChange}
+                        disabled={!!user} // Keep disabled since it's pre-filled
+                        required
+                        className="w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-200 text-sm sm:text-base bg-gray-100 cursor-not-allowed"
+                      />
+                    </label>
+                    <label className="font-medium text-gray-700 text-sm sm:text-base">
+                      Email
+                      <input
+                        type="email"
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        disabled={!!user} // Keep disabled since it's pre-filled
+                        required
+                        className="w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-200 text-sm sm:text-base bg-gray-100 cursor-not-allowed"
+                      />
+                    </label>
+                    <label className="font-medium text-gray-700 text-sm sm:text-base">
+                      Message
+                      <textarea
+                        name="message"
+                        rows="4"
+                        value={form.message}
+                        onChange={handleChange}
+                        placeholder="Please describe your inquiry in detail..."
+                        required
+                        className="w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-200 text-sm sm:text-base"
+                      />
+                    </label>
+                    <button
+                      type="submit"
+                      className="bg-cyan-600 text-white py-2 px-4 sm:px-6 rounded font-semibold hover:bg-cyan-700 transition text-sm sm:text-base disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      disabled={submitted}
+                    >
+                      {submitted ? "Thank You!" : "Send Message"}
+                    </button>
+                  </form>
+                )}
               </div>
             </section>
           </div>

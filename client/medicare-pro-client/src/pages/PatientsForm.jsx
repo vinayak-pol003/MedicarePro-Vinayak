@@ -420,7 +420,7 @@ export default function PatientRequestForm({ onSubmitted }) {
                 <option value="">Select a doctor</option>
                 {doctors.map((doctor) => (
                   <option key={doctor._id} value={doctor._id}>
-                    Dr. {doctor.name} - {doctor.specialization}
+                    {doctor.name} - {doctor.specialization}
                   </option>
                 ))}
               </select>

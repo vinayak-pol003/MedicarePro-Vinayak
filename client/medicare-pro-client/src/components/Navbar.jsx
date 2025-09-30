@@ -19,6 +19,7 @@ export default function Navbar() {
 
   const patientLinks = (
     <>
+      <Link to="/patients-dashboard" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Dashboard</Link>
       <Link to="/contactus" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Contact Us</Link>
       <Link to="/my-appointments" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>My Appointments</Link>
       <Link to="/profile" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Profile</Link>

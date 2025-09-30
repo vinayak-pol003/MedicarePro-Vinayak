@@ -1127,52 +1127,56 @@ router.patch('/appointments/:id/rating', authMiddleware, async (req, res) => {
 // ------------------- PATIENT-SPECIFIC ROUTES -------------------
 
 // Get logged-in patient's appointments
-router.get(
-  "/appointments/my",
-  authMiddleware,
-  roleCheck(["patient"]),
-  async (req, res) => {
-    try {
-      console.log("=== PATIENT APPOINTMENTS DEBUG ===");
-      console.log("User from token:", req.user);
+// In your routes file - Update the /appointments/my route
+router.get("/appointments/my", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
 
-      // Find patient document with the user's email
+    console.log("Fetching appointments for user:", userId, "Role:", userRole);
+
+    let appointments;
+
+    if (userRole === "patient") {
+      // Find patient by user email
       const patient = await Patient.findOne({ email: req.user.email });
-      console.log("Patient found:", patient ? patient._id : "No patient found");
-
+      
       if (!patient) {
-        console.log("No patient profile found with email:", req.user.email);
-        console.log("Available patients in database:");
-        const allPatients = await Patient.find({}, 'name email');
-        console.log(allPatients.map(p => `${p.name}: ${p.email}`));
-
-        // No patient profile found with this email
         return res.json([]);
       }
 
-      // Find appointments for that patient, populate doctor AND prescription
-      const appointments = await Appointment.find({ patient_id: patient._id })
-        .populate("doctor_id", "name email specialization")
-        .populate("prescription"); // <- ADDED: Always populate prescription!
+      appointments = await Appointment.find({ patient_id: patient._id })
+        .populate("patient_id", "name email phone")
+        .populate("doctor_id", "name email specialization consultation_fee") // ← ADD consultation_fee here
+        .sort({ date: -1 });
 
-      console.log(`Found ${appointments.length} appointments for patient ${patient._id}`);
-      console.log("Appointments:", appointments.map(apt => ({
-        id: apt._id,
-        date: apt.date,
-        time: apt.time,
-        doctor: apt.doctor_id?.name,
-        status: apt.status
-      })));
+    } else if (userRole === "doctor") {
+      const doctor = await Doctor.findOne({ email: req.user.email });
+      
+      if (!doctor) {
+        return res.json([]);
+      }
 
-      console.log("=== PATIENT APPOINTMENTS SUCCESS ===");
-      res.json(appointments);
-    } catch (err) {
-      console.error("=== PATIENT APPOINTMENTS ERROR ===");
-      console.error("Error details:", err);
-      res.status(500).json({ error: err.message, details: err.stack });
+      appointments = await Appointment.find({ doctor_id: doctor._id })
+        .populate("patient_id", "name email phone")
+        .populate("doctor_id", "name email specialization consultation_fee") // ← ADD consultation_fee here
+        .sort({ date: -1 });
+
+    } else if (userRole === "admin") {
+      appointments = await Appointment.find()
+        .populate("patient_id", "name email phone")
+        .populate("doctor_id", "name email specialization consultation_fee") // ← ADD consultation_fee here
+        .sort({ date: -1 });
     }
+
+    console.log(`Found ${appointments?.length || 0} appointments`);
+    res.json(appointments || []);
+
+  } catch (error) {
+    console.error("Error fetching user appointments:", error);
+    res.status(500).json({ error: error.message });
   }
-);
+});
 
 // Test endpoint to debug appointments
 router.get("/appointments/debug", authMiddleware, async (req, res) => {

@@ -485,7 +485,7 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
                     <option value="">Choose a doctor</option>
                     {doctors.map((doctor) => (
                       <option key={doctor._id} value={doctor._id}>
-                        Dr. {doctor.name} - {doctor.specialization}
+                        {doctor.name} - {doctor.specialization}
                         {doctor.consultation_fee && ` (₹${doctor.consultation_fee})`}
                       </option>
                     ))}
@@ -542,7 +542,7 @@ export default function PatientBookAppointment({ onAdded, patientData }) {
                     {myAppointments.slice(-3).map((appointment) => (
                       <div key={appointment._id} className="flex justify-between items-center p-2 bg-gray-50 rounded text-xs">
                         <div>
-                          <div className="font-medium">Dr. {appointment.doctor_id?.name || 'Unknown'}</div>
+                          <div className="font-medium">{appointment.doctor_id?.name || 'Unknown'}</div>
                           <div className="text-gray-500">{appointment.doctor_id?.specialization}</div>
                           <div className="text-gray-500">{appointment.date} at {appointment.time}</div>
                         </div>

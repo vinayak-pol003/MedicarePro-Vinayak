@@ -676,7 +676,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                       className="h-full bg-cyan-500 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.totalDoctors / MAX.doctors) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-cyan-700 font-semibold">{stats.totalDoctors}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-cyan-700 font-semibold">{stats.totalDoctors}/20</span>
                   </div>
                 </div>
                 {/* Patients */}
@@ -687,7 +687,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                       className="h-full bg-indigo-500 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.totalPatients / MAX.patients) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-700 font-semibold">{stats.totalPatients}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-700 font-semibold">{stats.totalPatients}/100</span>
                   </div>
                 </div>
                 {/* Admins */}
@@ -698,7 +698,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                       className="h-full bg-purple-500 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.totalAdmins / MAX.admins) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-700 font-semibold">{stats.totalAdmins}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-700 font-semibold">{stats.totalAdmins}/10</span>
                   </div>
                 </div>
                 {/* Appointments */}
@@ -709,7 +709,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                       className="h-full bg-teal-500 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.totalAppointments / MAX.appointments) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-teal-700 font-semibold">{stats.totalAppointments}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-teal-700 font-semibold">{stats.totalAppointments}/200</span>
                   </div>
                 </div>
                 {/* Today's Appointments */}
@@ -720,7 +720,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                       className="h-full bg-amber-400 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.todaysAppointments / MAX.todaysAppointments) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-amber-700 font-semibold">{stats.todaysAppointments}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-amber-700 font-semibold">{stats.todaysAppointments}/40</span>
                   </div>
                 </div>
               </div>

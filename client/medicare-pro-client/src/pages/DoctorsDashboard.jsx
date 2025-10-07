@@ -775,7 +775,7 @@ export default function DoctorDashboard() {
                       className="h-full bg-cyan-500 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.totalPatients / 50) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-cyan-700 font-semibold">{stats.totalPatients}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-cyan-700 font-semibold">{stats.totalPatients}/50</span>
                   </div>
                 </div>
                 
@@ -786,7 +786,7 @@ export default function DoctorDashboard() {
                       className="h-full bg-green-500 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.completedAppointments / 100) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-green-700 font-semibold">{stats.completedAppointments}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-green-700 font-semibold">{stats.completedAppointments}/100</span>
                   </div>
                 </div>
                 
@@ -797,7 +797,7 @@ export default function DoctorDashboard() {
                       className="h-full bg-orange-500 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.scheduledAppointments / 50) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-orange-700 font-semibold">{stats.scheduledAppointments}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-orange-700 font-semibold">{stats.scheduledAppointments}/50</span>
                   </div>
                 </div>
                 

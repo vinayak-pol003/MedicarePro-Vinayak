@@ -43,7 +43,7 @@ export default function SignIn() {
         } else if (data.role === "doctor") {
           navigate("/doctors-dashboard", { replace: true });
         } else {
-          navigate("/my-appointments", { replace: true });
+          navigate("/patients-dashboard", { replace: true });
         }
       }, 100); // 100ms delay
 

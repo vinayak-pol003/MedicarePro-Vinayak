@@ -5,6 +5,9 @@ import axios from "axios";
 import FadeInSection from "../utils/Fade";
 import toast from "react-hot-toast";
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+
 export default function Doctors() {
   const navigate = useNavigate();
   const [doctors, setDoctors] = useState([]);
@@ -17,7 +20,7 @@ export default function Doctors() {
     const fetchDoctors = async () => {
       try {
         setLoading(true);
-        let url = "https://medicare-pro-bwiw.onrender.com/api/doctors";
+        let url = `${BASE_URL}/api/doctors`;
         const params = new URLSearchParams();
 
         if (selectedSpecialization) {
@@ -53,7 +56,7 @@ export default function Doctors() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`https://medicare-pro-bwiw.onrender.com/api/doctors/${doctorId}`, {
+      await axios.delete(`${BASE_URL}/api/doctors/${doctorId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

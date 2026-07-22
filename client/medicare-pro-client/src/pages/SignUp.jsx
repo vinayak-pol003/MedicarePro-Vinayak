@@ -5,6 +5,10 @@ import bgImage from '../assets/bg.png';
 import FadeInSection from "../utils/Fade";
 import toast from "react-hot-toast";
 
+
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+
 export default function SignUp() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -18,7 +22,7 @@ export default function SignUp() {
     e.preventDefault();
 
     try {
-      const res = await fetch("https://medicare-pro-bwiw.onrender.com/api/users", {
+      const res = await fetch(`${BASE_URL}/api/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, role }),

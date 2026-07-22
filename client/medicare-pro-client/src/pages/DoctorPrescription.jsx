@@ -5,6 +5,9 @@ import bgImage from '../assets/bg.png'
 import FadeInSection from "../utils/Fade";
 import toast from "react-hot-toast";
 
+
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 export default function DoctorPrescription() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -53,7 +56,7 @@ export default function DoctorPrescription() {
       const token = localStorage.getItem("token");
       await axios.post(
 
-        `https://medicare-pro-bwiw.onrender.com/api/prescriptions/${id}`,
+        `${BASE_URL}/api/prescriptions/${id}`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );

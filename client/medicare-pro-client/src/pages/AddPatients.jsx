@@ -6,6 +6,9 @@ import FadeInSection from "../utils/Fade.jsx";
 import imagekit from "../utils/imagekit.jsx"; // <-- Import your utility
 import { useNavigate } from "react-router-dom";
 
+
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 export default function AddPatient({ onAdded }) {
   const { user } = useContext(AuthContext);
   const navigator = useNavigate();
@@ -26,7 +29,7 @@ export default function AddPatient({ onAdded }) {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await axios.get("https://medicare-pro-bwiw.onrender.com/api/doctors");
+        const response = await axios.get(`${BASE_URL}/api/doctors`);
         setDoctors(response.data);
         if (response.data.length > 0 && !formData.doctor_id) {
           setFormData(prev => ({ ...prev, doctor_id: response.data[0]._id }));
@@ -72,7 +75,7 @@ const handleSubmit = async (e) => {
   let imageUrl = "";
   try {
     // Fetch authentication params from backend manually
-    const res = await fetch("https://medicare-pro-bwiw.onrender.com/api/imagekit-auth");
+    const res = await fetch( `${BASE_URL}/api/imagekit-auth`);
     const authParams = await res.json(); // { token, signature, expire }
 
     if (imageFile) {
@@ -103,7 +106,7 @@ const handleSubmit = async (e) => {
       image: imageUrl
     };
 
-    const apiRes = await axios.post("https://medicare-pro-bwiw.onrender.com/api/patients", payload, {
+    const apiRes = await axios.post(`${BASE_URL}/api/patients`, payload, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

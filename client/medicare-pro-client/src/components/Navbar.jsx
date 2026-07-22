@@ -19,6 +19,8 @@ export default function Navbar() {
 
   const patientLinks = (
     <>
+      <Link to="/patients-dashboard" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+      <Link to="/contactus" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Contact Us</Link>
       <Link to="/my-appointments" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>My Appointments</Link>
       <Link to="/profile" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Profile</Link>
     </>
@@ -48,7 +50,8 @@ export default function Navbar() {
       {/* Desktop Links */}
       <div className="flex-1 flex justify-center">
         <div className="hidden md:flex space-x-6 items-center">
-          {(isPublicPage || (["patient"].includes(user?.role) && isLoggedIn)) && (
+          {/* Show public links only for public pages when not logged in OR not a patient */}
+          {isPublicPage && !isLoggedIn && (
             <>
               {publicLinks}
             </>
@@ -66,13 +69,14 @@ export default function Navbar() {
 
           {user?.role === "doctor" && (
             <>
-              <Link to="/dashboard" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+              <Link to="/doctors-dashboard" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Dashboard</Link>
               <Link to="/patients" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Patients</Link>
               <Link to="/appointments" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Appointments</Link>
               <Link to="/profile" className="text-gray-700 hover:text-cyan-600" onClick={() => setMenuOpen(false)}>Profile</Link>
             </>
           )}
 
+          {/* Patient gets only these 3 links when logged in */}
           {user?.role === "patient" && isLoggedIn && (
             <>
               {patientLinks}
@@ -103,7 +107,6 @@ export default function Navbar() {
         )}
       </div>
 
-
       {/* Mobile Hamburger */}
       <div className="md:hidden flex items-center">
         <button
@@ -118,13 +121,11 @@ export default function Navbar() {
         </button>
       </div>
 
-
-
-
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="fixed inset-0 top-16 bg-white bg-opacity-95 flex flex-col items-center justify-start space-y-6 py-6 md:hidden z-50 shadow-lg">
-          {(isPublicPage || (["patient", "doctor"].includes(user?.role) && isLoggedIn)) && (
+          {/* Show public links only for public pages when not logged in */}
+          {isPublicPage && !isLoggedIn && (
             <>
               {publicLinks}
             </>
@@ -142,15 +143,17 @@ export default function Navbar() {
 
           {user?.role === "doctor" && (
             <>
-              <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-cyan-600 text-lg">Dashboard</Link>
+              <Link to="/doctors-dashboard" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-cyan-600 text-lg">Dashboard</Link>
               <Link to="/patients" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-cyan-600 text-lg">Patients</Link>
               <Link to="/appointments" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-cyan-600 text-lg">Appointments</Link>
               <Link to="/profile" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-cyan-600 text-lg">Profile</Link>
             </>
           )}
 
+          {/* Patient gets only these 3 links when logged in */}
           {user?.role === "patient" && isLoggedIn && (
             <>
+              <Link to="/contactus" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-cyan-600 text-lg">Contact Us</Link>
               <Link to="/my-appointments" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-cyan-600 text-lg">My Appointments</Link>
               <Link to="/profile" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-cyan-600 text-lg">Profile</Link>
             </>

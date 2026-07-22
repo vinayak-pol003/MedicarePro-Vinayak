@@ -9,6 +9,8 @@ import bgImage from "../assets/bg.png";
 import { AuthContext } from "../contex/AuthContext.jsx";
 import FadeInSection from "../utils/Fade";
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 export default function AddAppointment({ onAdded }) {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -49,7 +51,7 @@ export default function AddAppointment({ onAdded }) {
   const fetchAppointments = useCallback(async () => {
     try {
       const token = user?.token || localStorage.getItem("token") || "";
-      const appointmentsRes = await axios.get("https://medicare-pro-bwiw.onrender.com/api/appointments", {
+      const appointmentsRes = await axios.get(`${BASE_URL}/api/appointments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -121,35 +123,48 @@ export default function AddAppointment({ onAdded }) {
     }
   }, [user]);
 
-  useEffect(() => {
-    const fetchLists = async () => {
-      try {
-        const token = user?.token || localStorage.getItem("token") || "";
+ useEffect(() => {
+  const fetchLists = async () => {
+    try {
+      const token = user?.token || localStorage.getItem("token") || "";
 
-        const [patientsRes, doctorsRes] = await Promise.all([
-          axios.get("https://medicare-pro-bwiw.onrender.com/api/patients", {
-            headers: { Authorization: `Bearer ${token}` },
-          }).catch(() => ({ data: [] })),
-          axios.get("https://medicare-pro-bwiw.onrender.com/api/doctors").catch(() => ({ data: [] }))
-        ]);
+      const [patientsRes, doctorsRes] = await Promise.all([
+        axios.get(`${BASE_URL}/api/patients`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => ({ data: [] })),
+        axios.get(`${BASE_URL}/api/doctors`).catch(() => ({ data: [] }))
+      ]);
 
-        setPatients(patientsRes.data || []);
-        setDoctors(doctorsRes.data || []);
+      setPatients(patientsRes.data || []);
+      setDoctors(doctorsRes.data || []);
 
-        if (Array.isArray(patientsRes.data) && patientsRes.data.length > 0 && !formData.patient_id) {
-          setFormData((prev) => ({ ...prev, patient_id: patientsRes.data[0]._id }));
+      // Set default patient
+      if (Array.isArray(patientsRes.data) && patientsRes.data.length > 0 && !formData.patient_id) {
+        setFormData((prev) => ({ ...prev, patient_id: patientsRes.data[0]._id }));
+      }
+      
+      // Set default doctor based on user role
+      if (user?.role === "doctor") {
+        // For doctors, find their own ID in the doctors list and set it
+        const currentDoctor = doctorsRes.data.find(doctor => doctor.email === user.email);
+        if (currentDoctor) {
+          setFormData((prev) => ({ ...prev, doctor_id: currentDoctor._id }));
         }
+      } else {
+        // For admin users, set first doctor as default
         if (Array.isArray(doctorsRes.data) && doctorsRes.data.length > 0 && !formData.doctor_id) {
           setFormData((prev) => ({ ...prev, doctor_id: doctorsRes.data[0]._id }));
         }
-      } catch {
-        setError("Failed to load patients or doctors list. Please refresh the page.");
       }
-    };
+    } catch {
+      setError("Failed to load patients or doctors list. Please refresh the page.");
+    }
+  };
 
-    fetchLists();
-    fetchAppointments();
-  }, [fetchAppointments]);
+  fetchLists();
+  fetchAppointments();
+}, [fetchAppointments, user]);
+
 
   useEffect(() => {
     const styleSheet = document.createElement("style");
@@ -239,7 +254,7 @@ export default function AddAppointment({ onAdded }) {
 
     const token = user?.token || localStorage.getItem("token") || "";
 
-    await axios.post("https://medicare-pro-bwiw.onrender.com/api/appointments", formData, {
+    await axios.post(`${BASE_URL}/api/appointments`, formData, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -423,27 +438,36 @@ export default function AddAppointment({ onAdded }) {
                   </select>
                 </div>
 
-                {/* Doctor Field */}
+                {/* Doctor Field - Modified to show logged-in doctor for doctor users */}
                 <div>
                   <label className="block mb-2 font-medium" htmlFor="doctor_id">
                     Doctor *
                   </label>
-                  <select
-                    id="doctor_id"
-                    name="doctor_id"
-                    value={formData.doctor_id}
-                    onChange={handleChange}
-                    required
-                    className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                  >
-                    <option value="">Select a doctor</option>
-                    {doctors.map((doctor) => (
-                      <option key={doctor._id} value={doctor._id}>
-                        {doctor.name} - {doctor.specialization}
-                      </option>
-                    ))}
-                  </select>
+                  {user?.role === "doctor" ? (
+                    // Read-only field showing the logged-in doctor's name
+                    <div className="w-full border border-gray-300 bg-gray-100 rounded px-4 py-2 text-gray-700">
+                      {user.name} - {user.specialization || 'Doctor'}
+                    </div>
+                  ) : (
+                    // Dropdown for admin users
+                    <select
+                      id="doctor_id"
+                      name="doctor_id"
+                      value={formData.doctor_id}
+                      onChange={handleChange}
+                      required
+                      className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    >
+                      <option value="">Select a doctor</option>
+                      {doctors.map((doctor) => (
+                        <option key={doctor._id} value={doctor._id}>
+                          {doctor.name} - {doctor.specialization}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
+
 
                 {/* Date Field */}
                 <div>

@@ -18,6 +18,9 @@ import {
   Cell
 } from 'recharts';
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
   const [stats, setStats] = useState({
@@ -78,55 +81,86 @@ export default function Dashboard() {
     };
 
     // Group appointments by day of week
-    const groupAppointmentsByDay = () => {
-      const weekDates = getCurrentWeekDates();
-      
-      // Initialize with 0 appointments for each day
-      const dayGroups = weekDates.reduce((groups, dayInfo) => {
-        groups[dayInfo.dayName] = {
-          day: dayInfo.dayName,
-          fullDay: dayInfo.fullDayName,
-          appointments: 0,
-          appointmentsList: [],
-          date: dayInfo.date,
-          isToday: dayInfo.date === new Date().toISOString().split('T')[0]
-        };
-        return groups;
-      }, {});
-
-      // Count actual appointments for each day
-      appointments.forEach(appointment => {
-        if (appointment.date) {
-          try {
-            // Extract date part from appointment date
-            const appointmentDate = appointment.date.includes('T') 
-              ? appointment.date.split('T')[0] 
-              : appointment.date;
-            
-            const dayName = getDayName(appointmentDate);
-            
-            if (dayGroups[dayName]) {
-              dayGroups[dayName].appointments++;
-              dayGroups[dayName].appointmentsList.push({
-                id: appointment._id,
-                patientName: appointment.patient_id?.name || 'Unknown',
-                doctorName: appointment.doctor_id?.name || 'Unknown',
-                time: appointment.time,
-                status: appointment.status
-              });
-            }
-          } catch (err) {
-            console.warn('Error processing appointment date:', appointment.date, err);
-          }
-        }
-      });
-
-      // Convert to array format for chart
-      return Object.values(dayGroups).sort((a, b) => {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        return days.indexOf(a.day) - days.indexOf(b.day);
-      });
+   // Group appointments by day of week - FIXED to only show appointments for THIS WEEK
+const groupAppointmentsByDay = () => {
+  const weekDates = getCurrentWeekDates();
+  
+  // Initialize with 0 appointments for each day
+  const dayGroups = weekDates.reduce((groups, dayInfo) => {
+    groups[dayInfo.dayName] = {
+      day: dayInfo.dayName,
+      fullDay: dayInfo.fullDayName,
+      appointments: 0,
+      appointmentsList: [],
+      date: dayInfo.date,
+      isToday: dayInfo.date === new Date().toISOString().split('T')[0]
     };
+    return groups;
+  }, {});
+
+  console.log("=== CURRENT WEEK DATES ===");
+  console.log("Week dates:", weekDates.map(d => `${d.dayName}: ${d.date}`));
+  
+  // Get current week date range for filtering
+  const currentWeekDates = weekDates.map(d => d.date); // Array of this week's dates
+  const startOfWeek = weekDates[0].date; // Sunday
+  const endOfWeek = weekDates[6].date;   // Saturday
+  
+  console.log(`Current week range: ${startOfWeek} to ${endOfWeek}`);
+
+  // FIXED: Only count appointments that fall within THIS WEEK's date range
+  appointments.forEach(appointment => {
+    if (appointment.date) {
+      try {
+        // Extract date part from appointment date
+        const appointmentDate = appointment.date.includes('T') 
+          ? appointment.date.split('T')[0] 
+          : appointment.date;
+        
+        console.log(`Checking appointment date: ${appointmentDate}`);
+        
+        // CRITICAL FIX: Only include appointments from this week
+        if (currentWeekDates.includes(appointmentDate)) {
+          const dayName = getDayName(appointmentDate);
+          
+          console.log(`✅ Appointment ${appointmentDate} is in current week (${dayName})`);
+          
+          if (dayGroups[dayName]) {
+            dayGroups[dayName].appointments++;
+            dayGroups[dayName].appointmentsList.push({
+              id: appointment._id,
+              patientName: appointment.patient_id?.name || 'Unknown',
+              doctorName: appointment.doctor_id?.name || 'Unknown',
+              time: appointment.time,
+              status: appointment.status,
+              date: appointmentDate
+            });
+          }
+        } else {
+          console.log(`❌ Appointment ${appointmentDate} is NOT in current week - EXCLUDED`);
+        }
+      } catch (err) {
+        console.warn('Error processing appointment date:', appointment.date, err);
+      }
+    }
+  });
+
+  const result = Object.values(dayGroups).sort((a, b) => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days.indexOf(a.day) - days.indexOf(b.day);
+  });
+  
+  console.log("=== WEEKLY APPOINTMENTS RESULT ===");
+  result.forEach(day => {
+    console.log(`${day.day} (${day.date}): ${day.appointments} appointments`);
+    if (day.appointments > 0) {
+      console.log("  Appointments:", day.appointmentsList.map(apt => `${apt.time} - ${apt.patientName}`));
+    }
+  });
+  
+  return result;
+};
+
 
     // REAL PATIENT GROWTH - Count patients by createdAt month
     const generateRealPatientGrowth = () => {
@@ -439,14 +473,25 @@ const CustomTooltip = ({ active, payload, label }) => {
               <p className="text-gray-600 text-sm sm:text-base">
                 Real-time overview based on actual database records • {new Date().toLocaleDateString()}
               </p>
+              
             </div>
 
-            {/* show button only for admins */}
-            {user?.role === "admin" && (
-              <button className="bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700">
-                <Link to="/add-admin">Add Admin</Link>
-              </button>
-            )}
+            {/* Admin buttons - responsive layout */}
+              {user?.role === "admin" && (
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                  <Link to="/add-admin">
+                    <button className="w-full sm:w-auto bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700 text-sm font-medium">
+                      Add Admin
+                    </button>
+                  </Link>
+                  
+                  <Link to="/admin/contacts">
+                    <button className="w-full sm:w-auto bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700 text-sm font-medium">
+                      Query Section
+                    </button>
+                  </Link>
+                </div>
+              )}              
           </div>
         </div>
 
@@ -631,7 +676,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                       className="h-full bg-cyan-500 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.totalDoctors / MAX.doctors) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-cyan-700 font-semibold">{stats.totalDoctors}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-cyan-700 font-semibold">{stats.totalDoctors}/20</span>
                   </div>
                 </div>
                 {/* Patients */}
@@ -642,7 +687,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                       className="h-full bg-indigo-500 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.totalPatients / MAX.patients) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-700 font-semibold">{stats.totalPatients}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-700 font-semibold">{stats.totalPatients}/100</span>
                   </div>
                 </div>
                 {/* Admins */}
@@ -653,7 +698,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                       className="h-full bg-purple-500 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.totalAdmins / MAX.admins) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-700 font-semibold">{stats.totalAdmins}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-700 font-semibold">{stats.totalAdmins}/10</span>
                   </div>
                 </div>
                 {/* Appointments */}
@@ -664,7 +709,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                       className="h-full bg-teal-500 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.totalAppointments / MAX.appointments) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-teal-700 font-semibold">{stats.totalAppointments}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-teal-700 font-semibold">{stats.totalAppointments}/200</span>
                   </div>
                 </div>
                 {/* Today's Appointments */}
@@ -675,7 +720,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                       className="h-full bg-amber-400 rounded-full transition-all duration-700"
                       style={{ width: `${Math.min((stats.todaysAppointments / MAX.todaysAppointments) * 100, 100)}%` }}
                     ></div>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-amber-700 font-semibold">{stats.todaysAppointments}</span>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-amber-700 font-semibold">{stats.todaysAppointments}/40</span>
                   </div>
                 </div>
               </div>

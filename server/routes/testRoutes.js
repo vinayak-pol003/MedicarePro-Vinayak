@@ -11,6 +11,9 @@ import Patient from "../models/Patient.js";
 import Appointment from "../models/Appointment.js";
 import { authMiddleware, roleCheck } from "../middleware/auth.js";
 import { io } from "../index.js";
+import Prescription from "../models/Prescription.js";
+import PatientRequest from "../models/PatientRequest.js";
+
 
 dotenv.config();
 const router = express.Router();
@@ -121,7 +124,7 @@ router.get("/profile", authMiddleware, async (req, res) => {
 });
 // ------------------- PATIENTS -------------------
 // Get all patients (admin & doctor only)
-router.get("/patients", authMiddleware, roleCheck(["admin", "doctor"]), async (req, res) => {
+router.get("/patients", authMiddleware, roleCheck(["admin", "doctor","patient"]), async (req, res) => {
   try {
     const patients = await Patient.find().populate("doctor_id", "name email specialization");
     res.json(patients);
@@ -129,6 +132,84 @@ router.get("/patients", authMiddleware, roleCheck(["admin", "doctor"]), async (r
     res.status(500).json({ error: err.message });
   }
 });
+
+// PUT route for updating profile - add this after your GET /profile route
+router.put("/profile", authMiddleware, async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    const userId = req.user.id;
+    
+    // Build update object with only provided fields
+    const updateData = {};
+    
+    if (name && name.trim() !== "") {
+      updateData.name = name.trim();
+    }
+    
+    if (email && email.trim() !== "") {
+      // Check if email is already taken by another user
+      const existingUser = await User.findOne({ 
+        email: email.trim(), 
+        _id: { $ne: userId } 
+      });
+      if (existingUser) {
+        return res.status(400).json({ message: "Email is already in use by another account" });
+      }
+      updateData.email = email.trim();
+    }
+    
+    if (password && password.trim() !== "") {
+      // Hash the new password
+      const saltRounds = 10;
+      updateData.password = await bcrypt.hash(password.trim(), saltRounds);
+    }
+
+    // Check if there's anything to update
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: "No valid fields to update" });
+    }
+
+    // Update user in database
+    const updatedUser = await User.findByIdAndUpdate(
+      userId, 
+      updateData, 
+      { 
+        new: true, // Return the updated document
+        select: '-password', // Exclude password from response
+        runValidators: true // Run mongoose validation
+      }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      message: "Profile updated successfully",
+      ...updatedUser.toObject()
+    });
+
+  } catch (error) {
+    console.error('Profile update error:', error);
+    
+    // Handle mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ message: errors.join(', ') });
+    }
+    
+    // Handle duplicate key errors (if email is unique in schema)
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Email is already in use" });
+    }
+    
+    res.status(500).json({ 
+      message: 'Server error while updating profile',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
 
 
 // Create patient (doctor and admin allowed)
@@ -159,6 +240,187 @@ router.get("/patients", authMiddleware, roleCheck(["admin", "doctor"]), async (r
 //     }
 //   }
 // );
+// ------------------- PATIENT REQUESTS -------------------
+
+// Get user's request status (for patients)
+router.get("/patient-requests/my-status", authMiddleware, roleCheck(["patient"]), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    console.log("Checking patient request status for user:", userId);
+    
+    const request = await PatientRequest.findOne({ user_id: userId });
+    
+    console.log("Found request:", request ? "YES" : "NO");
+    
+    res.json({
+      hasRequest: !!request,
+      status: request?.status || null,
+      request: request || null
+    });
+  } catch (error) {
+    console.error("Error checking request status:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Submit patient registration request
+router.post("/patient-requests", authMiddleware, roleCheck(["patient"]), async (req, res) => {
+  try {
+    const { name, email, phone, description, image, doctor_id } = req.body;
+    const user_id = req.user.id;
+
+    console.log("Creating patient request for user:", user_id);
+    console.log("Request data:", { name, email, phone, doctor_id });
+
+    // Check if user already has pending request
+    const existingRequest = await PatientRequest.findOne({
+      user_id,
+      status: { $in: ["pending", "approved"] }
+    });
+
+    if (existingRequest) {
+      console.log("User already has existing request:", existingRequest.status);
+      return res.status(400).json({ 
+        message: `You already have a ${existingRequest.status} patient registration request` 
+      });
+    }
+
+    // Validate required fields
+    if (!name || !doctor_id || !phone) {
+      return res.status(400).json({
+        message: "Name, phone, and doctor selection are required"
+      });
+    }
+
+    // Validate doctor exists
+    if (!mongoose.Types.ObjectId.isValid(doctor_id)) {
+      return res.status(400).json({ message: "Invalid doctor ID format" });
+    }
+
+    const doctor = await Doctor.findById(doctor_id);
+    if (!doctor) {
+      return res.status(400).json({ message: "Selected doctor not found" });
+    }
+
+    const patientRequest = new PatientRequest({
+      user_id,
+      name: name.trim(),
+      email: email?.trim() || req.user.email,
+      phone: phone.trim(),
+      description: description?.trim(),
+      image,
+      doctor_id
+    });
+
+    await patientRequest.save();
+
+    console.log("Patient request created successfully:", patientRequest._id);
+
+    res.status(201).json({
+      message: "Patient registration request submitted successfully. Awaiting admin approval.",
+      request: patientRequest
+    });
+  } catch (error) {
+    console.error("Error creating patient request:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all patient requests (admin only)
+router.get("/patient-requests", authMiddleware, roleCheck(["admin"]), async (req, res) => {
+  try {
+    const requests = await PatientRequest.find()
+      .populate("user_id", "name email")
+      .populate("doctor_id", "name specialization")
+      .sort({ createdAt: -1 });
+
+    res.json(requests);
+  } catch (error) {
+    console.error("Error fetching patient requests:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Approve patient request (admin only)
+router.patch("/patient-requests/:requestId/approve", authMiddleware, roleCheck(["admin"]), async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const adminId = req.user.id;
+
+    const request = await PatientRequest.findById(requestId);
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    if (request.status !== "pending") {
+      return res.status(400).json({ message: "Request already processed" });
+    }
+
+    // Create Patient record
+    const patient = new Patient({
+      name: request.name,
+      email: request.email,
+      phone: request.phone,
+      description: request.description,
+      image: request.image,
+      doctor_id: request.doctor_id
+    });
+
+    const savedPatient = await patient.save();
+
+    // Update request status
+    request.status = "approved";
+    request.processed_by = adminId;
+    request.patient_id = savedPatient._id;
+    await request.save();
+
+    console.log("Patient request approved. Patient created:", savedPatient._id);
+
+    res.json({
+      message: "Patient request approved successfully",
+      patient: savedPatient
+    });
+  } catch (error) {
+    console.error("Error approving patient request:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reject patient request (admin only)
+router.patch("/patient-requests/:requestId/reject", authMiddleware, roleCheck(["admin"]), async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { reason } = req.body;
+    const adminId = req.user.id;
+
+    const request = await PatientRequest.findById(requestId);
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    if (request.status !== "pending") {
+      return res.status(400).json({ message: "Request already processed" });
+    }
+
+    request.status = "rejected";
+    request.processed_by = adminId;
+    request.rejection_reason = reason || "No reason provided";
+    await request.save();
+
+    console.log("Patient request rejected:", requestId);
+
+    res.json({
+      message: "Patient request rejected",
+      reason: request.rejection_reason
+    });
+  } catch (error) {
+    console.error("Error rejecting patient request:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 
 router.post(
   "/patients",
@@ -268,6 +530,66 @@ router.put("/patients/:id", authMiddleware, roleCheck(["admin", "doctor"]), asyn
 });
 
 
+// routes/patientRoutes.js - Add this endpoint
+router.get("/patients/check-user/:userId", authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const patient = await Patient.exists({ _id: userId });
+    
+    res.json({ 
+      exists: !!patient,
+      patient: patient ? await Patient.findById(userId) : null 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// routes/patientRequestRoutes.js - Add this endpoint  
+router.get("/patients/my-status", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const request = await PatientRequest.findOne({ user_id: userId });
+    
+    res.json({
+      hasRequest: !!request,
+      status: request?.status || null,
+      request: request || null
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add this route AFTER your existing patient routes
+router.get("/patients/check-by-email/:email", authMiddleware, roleCheck(["patient", "admin", "doctor"]), async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    // Find patient by email (case-insensitive)
+    const patient = await Patient.findOne({ 
+      email: { $regex: new RegExp(`^${email}$`, 'i') }
+    });
+    
+    res.json({ 
+      exists: !!patient,
+      patient: patient ? {
+        _id: patient._id,
+        name: patient.name,
+        email: patient.email,
+        doctor_id: patient.doctor_id
+      } : null 
+    });
+  } catch (error) {
+    console.error("Error checking patient by email:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
 // View single patient (optional, for 'view details' page)
 router.get(
   "/patients/:id",
@@ -278,16 +600,173 @@ router.get(
       if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return res.status(400).json({ message: "Invalid patient id." });
       }
-      const patient = await Patient.findById(req.params.id).populate("doctor_id", "name email specialization");
-      if (!patient) {
+
+      const patientWithAllDoctors = await Patient.aggregate([
+        {
+          $match: { _id: new mongoose.Types.ObjectId(req.params.id) }
+        },
+        // Get direct doctor
+        {
+          $lookup: {
+            from: "doctors",
+            localField: "doctor_id",
+            foreignField: "_id", 
+            as: "directDoctor"
+          }
+        },
+        // Get all appointments for this patient
+        {
+          $lookup: {
+            from: "appointments",
+            localField: "_id",
+            foreignField: "patient_id",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "doctors",
+                  localField: "doctor_id", 
+                  foreignField: "_id",
+                  as: "doctor"
+                }
+              },
+              {
+                $unwind: "$doctor"
+              },
+              {
+                $project: {
+                  doctor: {
+                    _id: 1,
+                    name: 1,
+                    email: 1,
+                    specialization: 1,
+                    specialty: 1,
+                    phone: 1,
+                    image: 1,
+                    hospital: 1
+                  },
+                  date: 1,
+                  time: 1,
+                  status: 1,
+                  rating: 1,
+                  createdAt: 1
+                }
+              }
+            ],
+            as: "appointmentsWithDoctors"
+          }
+        },
+        // Project final result
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            email: 1,
+            phone: 1,
+            description: 1,
+            image: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            // Keep original doctor_id populated for backward compatibility
+            doctor_id: { 
+              $cond: {
+                if: { $gt: [{ $size: "$directDoctor" }, 0] },
+                then: { $arrayElemAt: ["$directDoctor", 0] },
+                else: null
+              }
+            },
+            // Add new fields for all assigned doctors
+            directDoctor: { 
+              $cond: {
+                if: { $gt: [{ $size: "$directDoctor" }, 0] },
+                then: { $arrayElemAt: ["$directDoctor", 0] },
+                else: null
+              }
+            },
+            // Get unique doctors from appointments (removing duplicates)
+            appointmentDoctors: {
+              $reduce: {
+                input: "$appointmentsWithDoctors.doctor",
+                initialValue: [],
+                in: {
+                  $cond: {
+                    if: { $in: ["$$this._id", "$$value._id"] },
+                    then: "$$value",
+                    else: { $concatArrays: ["$$value", ["$$this"]] }
+                  }
+                }
+              }
+            },
+            // Full appointment history with doctor details
+            appointmentHistory: "$appointmentsWithDoctors",
+            // Count of unique assigned doctors
+            totalAssignedDoctors: {
+              $add: [
+                { $cond: [{ $gt: [{ $size: "$directDoctor" }, 0] }, 1, 0] },
+                { $size: {
+                  $reduce: {
+                    input: "$appointmentsWithDoctors.doctor",
+                    initialValue: [],
+                    in: {
+                      $cond: {
+                        if: { $in: ["$$this._id", "$$value._id"] },
+                        then: "$$value",
+                        else: { $concatArrays: ["$$value", ["$$this"]] }
+                      }
+                    }
+                  }
+                }}
+              ]
+            }
+          }
+        }
+      ]);
+
+      if (!patientWithAllDoctors.length) {
         return res.status(404).json({ message: "Patient not found." });
       }
+
+      const patient = patientWithAllDoctors[0];
+
+      // **FIXED: Role-based filtering for doctors**
+      if (req.user.role === "doctor") {
+        console.log("Doctor access check:", {
+          userEmail: req.user.email,
+          userId: req.user.id,
+          directDoctor: patient.directDoctor,
+          appointmentDoctors: patient.appointmentDoctors
+        });
+
+        // Check if doctor has access via direct assignment
+        const isDirectlyAssigned = patient.directDoctor && 
+          patient.directDoctor.email === req.user.email;
+
+        // Check if doctor has access via appointments
+        const hasAppointmentAccess = patient.appointmentDoctors && 
+          patient.appointmentDoctors.some(doc => doc.email === req.user.email);
+
+        if (!isDirectlyAssigned && !hasAppointmentAccess) {
+          console.log("Access denied for doctor:", req.user.email);
+          return res.status(403).json({ 
+            message: "Access denied. You can only view patients assigned to you or with whom you have appointments." 
+          });
+        }
+
+        console.log("Access granted for doctor:", req.user.email);
+      }
+
       res.json(patient);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      console.error("Error fetching patient details:", err);
+      res.status(500).json({ 
+        error: err.message,
+        message: "Failed to fetch patient details"
+      });
     }
   }
 );
+
+
+// -----------------------------------------------------------------------------------------------------user status------
 
 
 // ------------------- APPOINTMENTS -------------------
@@ -415,6 +894,36 @@ router.get(
     }
   );
 
+  // Add this route in the APPOINTMENTS section
+router.get("/appointments/patient/:patientId", authMiddleware, roleCheck(["patient", "admin", "doctor"]), async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    
+    // Validate patient ID format
+    if (!mongoose.Types.ObjectId.isValid(patientId)) {
+      return res.status(400).json({ message: "Invalid patient ID format" });
+    }
+    
+    // For security: ensure patients can only access their own appointments
+    if (req.user.role === "patient") {
+      const patient = await Patient.findOne({ email: req.user.email });
+      if (!patient || patient._id.toString() !== patientId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+    }
+    
+    const appointments = await Appointment.find({ patient_id: patientId })
+      .populate("doctor_id", "name email specialization")
+      .populate("prescription")
+      .sort({ date: -1, time: -1 });
+    
+    res.json(appointments);
+  } catch (error) {
+    console.error("Error fetching patient appointments:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 
 
@@ -527,7 +1036,7 @@ router.put("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", 
   }
 });
 
-// Delete appointment
+// Delete appointment (soft delete)
 router.delete("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor", "admin"]), async (req, res) => {
   try {
     const deleted = await Appointment.findByIdAndDelete(req.params.id);
@@ -538,55 +1047,136 @@ router.delete("/appointments/:id", authMiddleware, roleCheck(["patient", "doctor
   }
 });
 
+// routes/appointments.js
+// REPLACE your existing rating route with this corrected version:
+router.patch('/appointments/:id/rating', authMiddleware, async (req, res) => {
+  try {
+    console.log("=== RATING UPDATE DEBUG ===");
+    console.log("Appointment ID:", req.params.id);
+    console.log("Rating:", req.body.rating);
+    console.log("User from token:", req.user);
+
+    const { id } = req.params;
+    const { rating } = req.body;
+    
+    // Validate rating
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rating must be between 1 and 5'
+      });
+    }
+
+    // CRITICAL FIX: Find the patient first using user's email
+    const patient = await Patient.findOne({ email: req.user.email });
+    if (!patient) {
+      console.log("No patient found with email:", req.user.email);
+      return res.status(404).json({
+        success: false,
+        message: 'Patient profile not found'
+      });
+    }
+
+    console.log("Patient found:", patient._id);
+
+    // Find appointment using patient._id (not req.user.id)
+    const appointment = await Appointment.findOne({
+      _id: id,
+      patient_id: patient._id  // <-- This is the key fix!
+    });
+
+    if (!appointment) {
+      console.log("Appointment not found for patient:", patient._id, "appointment:", id);
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found or you do not have permission to rate this appointment'
+      });
+    }
+
+    console.log("Appointment found:", appointment._id);
+
+    // Update the rating
+    appointment.rating = parseInt(rating);
+    await appointment.save();
+
+    console.log("Rating updated successfully to:", appointment.rating);
+
+    res.json({
+      success: true,
+      message: 'Rating updated successfully',
+      data: {
+        _id: appointment._id,
+        rating: appointment.rating
+      }
+    });
+
+    console.log("=== RATING UPDATE SUCCESS ===");
+  } catch (error) {
+    console.error('=== RATING UPDATE ERROR ===');
+    console.error('Error updating appointment rating:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update rating',
+      error: error.message
+    });
+  }
+});
+
+
+
 // ------------------- PATIENT-SPECIFIC ROUTES -------------------
 
 // Get logged-in patient's appointments
-router.get(
-  "/appointments/my",
-  authMiddleware,
-  roleCheck(["patient"]),
-  async (req, res) => {
-    try {
-      console.log("=== PATIENT APPOINTMENTS DEBUG ===");
-      console.log("User from token:", req.user);
+// In your routes file - Update the /appointments/my route
+router.get("/appointments/my", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
 
-      // Find patient document with the user's email
+    console.log("Fetching appointments for user:", userId, "Role:", userRole);
+
+    let appointments;
+
+    if (userRole === "patient") {
+      // Find patient by user email
       const patient = await Patient.findOne({ email: req.user.email });
-      console.log("Patient found:", patient ? patient._id : "No patient found");
-
+      
       if (!patient) {
-        console.log("No patient profile found with email:", req.user.email);
-        console.log("Available patients in database:");
-        const allPatients = await Patient.find({}, 'name email');
-        console.log(allPatients.map(p => `${p.name}: ${p.email}`));
-
-        // No patient profile found with this email
         return res.json([]);
       }
 
-      // Find appointments for that patient, populate doctor AND prescription
-      const appointments = await Appointment.find({ patient_id: patient._id })
-        .populate("doctor_id", "name email specialization")
-        .populate("prescription"); // <- ADDED: Always populate prescription!
+      appointments = await Appointment.find({ patient_id: patient._id })
+        .populate("patient_id", "name email phone")
+        .populate("doctor_id", "name email specialization consultation_fee") // ← ADD consultation_fee here
+        .sort({ date: -1 });
 
-      console.log(`Found ${appointments.length} appointments for patient ${patient._id}`);
-      console.log("Appointments:", appointments.map(apt => ({
-        id: apt._id,
-        date: apt.date,
-        time: apt.time,
-        doctor: apt.doctor_id?.name,
-        status: apt.status
-      })));
+    } else if (userRole === "doctor") {
+      const doctor = await Doctor.findOne({ email: req.user.email });
+      
+      if (!doctor) {
+        return res.json([]);
+      }
 
-      console.log("=== PATIENT APPOINTMENTS SUCCESS ===");
-      res.json(appointments);
-    } catch (err) {
-      console.error("=== PATIENT APPOINTMENTS ERROR ===");
-      console.error("Error details:", err);
-      res.status(500).json({ error: err.message, details: err.stack });
+      appointments = await Appointment.find({ doctor_id: doctor._id })
+        .populate("patient_id", "name email phone")
+        .populate("doctor_id", "name email specialization consultation_fee") // ← ADD consultation_fee here
+        .sort({ date: -1 });
+
+    } else if (userRole === "admin") {
+      appointments = await Appointment.find()
+        .populate("patient_id", "name email phone")
+        .populate("doctor_id", "name email specialization consultation_fee") // ← ADD consultation_fee here
+        .sort({ date: -1 });
     }
+
+    console.log(`Found ${appointments?.length || 0} appointments`);
+    res.json(appointments || []);
+
+  } catch (error) {
+    console.error("Error fetching user appointments:", error);
+    res.status(500).json({ error: error.message });
   }
-);
+});
 
 // Test endpoint to debug appointments
 router.get("/appointments/debug", authMiddleware, async (req, res) => {

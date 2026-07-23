@@ -93,6 +93,7 @@ export default function SignUp() {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
                   className="w-full border px-3 sm:px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
                 />
                 <p className="text-gray-500 px-2 text-xs">At least 8 characters must be entered.</p>

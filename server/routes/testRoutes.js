@@ -578,9 +578,18 @@ router.get("/patients/check-by-email/:email", authMiddleware, roleCheck(["patien
     const { email } = req.params;
     
     // Find patient by email (case-insensitive)
-    const patient = await Patient.findOne({ 
+    let patient = await Patient.findOne({ 
       email: { $regex: new RegExp(`^${email}$`, 'i') }
     });
+
+    // Auto-create Patient record if missing for existing users
+    if (!patient) {
+      const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+      if (user) {
+        patient = new Patient({ name: user.name, email: user.email });
+        await patient.save();
+      }
+    }
     
     res.json({ 
       exists: !!patient,

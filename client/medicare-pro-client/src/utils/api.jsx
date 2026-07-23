@@ -2,8 +2,8 @@ import axios from "axios";
 import { io } from "socket.io-client";
 
 // API Configuration
-const API_BASE_URL = "http://localhost:5000/api";
-const SOCKET_URL = "http://localhost:5000";
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
+const SOCKET_URL = import.meta.env.VITE_API_URL;
 
 // Create a custom Axios instance
 const API = axios.create({

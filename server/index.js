@@ -28,7 +28,8 @@ const io = new Server(server, {
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://medicarenow.netlify.app"
+    "https://medicarenow.netlify.app",
+    "https://medicare-pro-vinayak-ckyj.vercel.app"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
